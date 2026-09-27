@@ -199,14 +199,21 @@ PlasmaCore.Dialog {
                     // Close button
                     PlasmaComponents3.ToolButton {
                         id: closeButton
+                        z: 1  // Stay above mouseArea
                         anchors.top: parent.top
                         anchors.right: parent.right
                         anchors.margins: 2
-                        width: Kirigami.Units.iconSizes.small
+                        width: Kirigami.Units.iconSizes.smallMedium
                         height: width
                         icon.name: "window-close"
-                        visible: mouseArea.containsMouse
-                        opacity: 0.8
+                        visible: mouseArea.containsMouse || closeButton.hovered
+                        opacity: closeButton.hovered ? 1.0 : 0.8
+
+                        background: Rectangle {
+                            radius: width / 2
+                            color: Kirigami.Theme.backgroundColor
+                            opacity: 0.8
+                        }
 
                         onClicked: {
                             groupDialog.tasksModel.requestClose(windowDelegate.childModelIndex);
