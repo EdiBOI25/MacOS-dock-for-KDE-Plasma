@@ -163,12 +163,40 @@ Item {
         return -1;
     }
 
+    function publishIconGeometry(task) {
+        if (!task || task.isLauncher || task.model.IsStartup) return;
+        var pos = task.mapToGlobal(0, 0);
+        model.requestPublishDelegateGeometry(model.makeModelIndex(task.taskIndex),
+                                             Qt.rect(pos.x, pos.y, task.width, task.height), task);
+    }
+
+    function publishIconGeometries() {
+        for (let i = 0; i < taskRepeater.count; i++) {
+            publishIconGeometry(taskRepeater.itemAt(i));
+        }
+    }
+
+    Timer {
+        id: iconGeometryTimer
+        interval: 250
+        onTriggered: taskListRoot.publishIconGeometries()
+    }
+
+    onWidthChanged: iconGeometryTimer.restart()
+    onHeightChanged: iconGeometryTimer.restart()
+
     // Update counter when model data changes
     Connections {
         target: taskListRoot.model
         function onDataChanged() {
             taskListRoot.modelUpdateCounter++;
         }
+        // Also fires for a window joining a group, which needs the group's rect
+        function onRowsInserted() { iconGeometryTimer.restart(); }
+        function onRowsRemoved() { iconGeometryTimer.restart(); }
+        function onRowsMoved() { iconGeometryTimer.restart(); }
+        function onLayoutChanged() { iconGeometryTimer.restart(); }
+        function onModelReset() { iconGeometryTimer.restart(); }
     }
 
     readonly property int baseIconSize: Math.max(panelThickness - Kirigami.Units.smallSpacing * 4, Kirigami.Units.iconSizes.medium)
@@ -267,6 +295,14 @@ Item {
                 // Manual positioning - no layout involvement
                 x: vertical ? (taskListRoot.width - width) / 2 : index * (effectiveIconSize + itemSpacing)
                 y: vertical ? index * (effectiveIconSize + itemSpacing) : (taskListRoot.height - height) / 2
+
+                // Republish the minimize target whenever this slot moves, resizes or changes role
+                onXChanged: iconGeometryTimer.restart()
+                onYChanged: iconGeometryTimer.restart()
+                onWidthChanged: iconGeometryTimer.restart()
+                onIsLauncherChanged: iconGeometryTimer.restart()
+                onGroupChildCountChanged: iconGeometryTimer.restart()
+                Component.onCompleted: iconGeometryTimer.restart()
 
                 vertical: taskListRoot.vertical
                 panelLocation: taskListRoot.panelLocation

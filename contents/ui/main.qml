@@ -255,6 +255,8 @@ PlasmoidItem {
                 var isMinimized = tasksModel.data(modelIndex, TaskManager.AbstractTasksModel.IsMinimized);
                 var isGroupParent = tasksModel.data(modelIndex, TaskManager.AbstractTasksModel.IsGroupParent);
 
+                taskList.publishIconGeometry(taskList.getTaskAt(index));
+
                 if (button === Qt.LeftButton) {
                     if (modifiers & Qt.ShiftModifier) {
                         tasksModel.requestNewInstance(modelIndex);
@@ -279,6 +281,7 @@ PlasmoidItem {
                 var task = taskList.getTaskAt(index);
                 console.log("Task:", task, "ModelIndex:", modelIndex);
                 if (task) {
+                    taskList.publishIconGeometry(task);
                     var menu = root.createContextMenu(task, modelIndex);
                     console.log("Menu created:", menu);
                     if (menu) {
@@ -427,6 +430,52 @@ PlasmoidItem {
         case 5: // Bring to Current Desktop
             tasksModel.requestVirtualDesktops(modelIndex, [virtualDesktopInfo.currentDesktop]);
             break;
+        }
+    }
+
+    // Republish minimize targets after a delay
+    Timer {
+        id: panelSettleTimer
+        interval: 500
+        onTriggered: taskList.publishIconGeometries()
+    }
+
+    Connections {
+        target: Plasmoid
+        function onLocationChanged() {
+            panelSettleTimer.restart();
+        }
+    }
+
+    Connections {
+        target: Plasmoid.containment
+        function onScreenGeometryChanged() {
+            panelSettleTimer.restart();
+        }
+    }
+
+    // Watch the whole parent panel
+    readonly property var sceneAncestors: {
+        const chain = [];
+        for (let item = root; item; item = item.parent) chain.push(item);
+        return chain;
+    }
+    onSceneAncestorsChanged: panelSettleTimer.restart()
+
+    Instantiator {
+        model: root.sceneAncestors
+        delegate: Connections {
+            required property var modelData
+            target: modelData
+            function onXChanged() { panelSettleTimer.restart(); }
+            function onYChanged() { panelSettleTimer.restart(); }
+        }
+    }
+
+    Connections {
+        target: root.Window.window
+        function onVisibleChanged() {
+            panelSettleTimer.restart();
         }
     }
 
