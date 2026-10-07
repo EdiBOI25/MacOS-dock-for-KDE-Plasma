@@ -56,6 +56,14 @@ PlasmaCore.Dialog {
     // change notifications of their own, so bindings read this to re-evaluate.
     property int refreshCounter: 0
 
+    // dataChanged arrives in bursts (many per second, for any task). Each bump
+    // re-reads every thumbnail's data and re-sets its icon, so coalesce them.
+    function scheduleRefresh() {
+        if (!refreshTimer.running) {
+            refreshTimer.start();
+        }
+    }
+
     function modelChanged() {
         updateGroupIndex();
         syncWindows();
@@ -178,6 +186,12 @@ PlasmaCore.Dialog {
             id: windowsModel
         }
 
+        Timer {
+            id: refreshTimer
+            interval: 50
+            onTriggered: groupDialog.refreshCounter++
+        }
+
         // Keep groupIndex pointing at the group and refresh the thumbnails when the model changes
         Connections {
             target: groupDialog.tasksModel
@@ -187,7 +201,7 @@ PlasmaCore.Dialog {
             function onLayoutChanged() { groupDialog.modelChanged(); }
             function onModelReset() { groupDialog.modelChanged(); }
             function onDataChanged() {
-                groupDialog.refreshCounter++;
+                groupDialog.scheduleRefresh();
                 groupDialog.closeIfNotGroup();
             }
         }
