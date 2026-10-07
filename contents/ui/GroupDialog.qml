@@ -270,8 +270,8 @@ PlasmaCore.Dialog {
                 height: groupDialog.thumbnailHeight + titleLabel.height + Kirigami.Units.smallSpacing
 
                 // Stable identity of this delegate's window; its row can change
-                readonly property string key: winKey
-                property int row: groupDialog.rowOfKey(key)
+                required property string winKey
+                property int row: groupDialog.rowOfKey(winKey)
 
                 property string windowTitle: groupDialog.childData(row, Qt.DisplayRole) || ""
                 property var windowIcon: groupDialog.childData(row, Qt.DecorationRole)
@@ -279,8 +279,7 @@ PlasmaCore.Dialog {
                 property bool isMinimized: groupDialog.childData(row, TaskManager.AbstractTasksModel.IsMinimized) || false
                 // Derived from the key (not looked up by row) so a thumbnail
                 // never switches windows and its stream isn't restarted
-                property var winId: Number(key) || 0
-                property string visibleUuid: key
+                property var winId: Number(winKey) || 0
 
                 // Thumbnail container
                 Rectangle {
@@ -306,7 +305,7 @@ PlasmaCore.Dialog {
 
                     TaskManager.ScreencastingRequest {
                         id: screencastRequest
-                        uuid: windowDelegate.visibleUuid
+                        uuid: windowDelegate.winKey
                     }
 
                     // X11: PlasmaCore.WindowThumbnail
@@ -365,7 +364,7 @@ PlasmaCore.Dialog {
                         }
 
                         onClicked: {
-                            groupDialog.tasksModel.requestClose(groupDialog.childIndexForKey(windowDelegate.key));
+                            groupDialog.tasksModel.requestClose(groupDialog.childIndexForKey(windowDelegate.winKey));
                         }
                     }
 
@@ -377,9 +376,9 @@ PlasmaCore.Dialog {
 
                         onClicked: function(mouse) {
                             if (mouse.button === Qt.MiddleButton) {
-                                groupDialog.tasksModel.requestClose(groupDialog.childIndexForKey(windowDelegate.key));
+                                groupDialog.tasksModel.requestClose(groupDialog.childIndexForKey(windowDelegate.winKey));
                             } else {
-                                groupDialog.tasksModel.requestActivate(groupDialog.childIndexForKey(windowDelegate.key));
+                                groupDialog.tasksModel.requestActivate(groupDialog.childIndexForKey(windowDelegate.winKey));
                                 groupDialog.visible = false;
                             }
                         }
@@ -414,7 +413,7 @@ PlasmaCore.Dialog {
                             groupDialog.anyDropHovered = false;
                             dropActivationTimer.stop();
                             if (drop.hasUrls) {
-                                groupDialog.tasksModel.requestOpenUrls(groupDialog.childIndexForKey(windowDelegate.key), drop.urls);
+                                groupDialog.tasksModel.requestOpenUrls(groupDialog.childIndexForKey(windowDelegate.winKey), drop.urls);
                                 groupDialog.visible = false;
                                 drop.accepted = true;
                             }
@@ -427,7 +426,7 @@ PlasmaCore.Dialog {
                         interval: 400
                         onTriggered: {
                             // Activate window so user can see it
-                            groupDialog.tasksModel.requestActivate(groupDialog.childIndexForKey(windowDelegate.key));
+                            groupDialog.tasksModel.requestActivate(groupDialog.childIndexForKey(windowDelegate.winKey));
                         }
                     }
 
