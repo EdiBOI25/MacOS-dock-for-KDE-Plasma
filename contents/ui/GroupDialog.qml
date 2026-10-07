@@ -59,6 +59,19 @@ PlasmaCore.Dialog {
     function modelChanged() {
         updateGroupIndex();
         refreshCounter++;
+        closeIfNotGroup();
+    }
+
+    // The group dissolves into a plain task once a single window is left (or
+    // vanishes entirely), leaving nothing to list: dismiss the dialog.
+    function closeIfNotGroup() {
+        if (!visible || groupAppId === "") {
+            return;
+        }
+        if (groupIndex < 0
+                || !tasksModel.data(tasksModel.makeModelIndex(groupIndex), TaskManager.AbstractTasksModel.IsGroupParent)) {
+            visible = false;
+        }
     }
 
     function childCount() {
@@ -107,7 +120,10 @@ PlasmaCore.Dialog {
             function onRowsMoved() { groupDialog.modelChanged(); }
             function onLayoutChanged() { groupDialog.modelChanged(); }
             function onModelReset() { groupDialog.modelChanged(); }
-            function onDataChanged() { groupDialog.refreshCounter++; }
+            function onDataChanged() {
+                groupDialog.refreshCounter++;
+                groupDialog.closeIfNotGroup();
+            }
         }
 
         // Container-level drop area to catch drops that miss individual windows
