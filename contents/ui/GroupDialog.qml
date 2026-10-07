@@ -188,7 +188,7 @@ PlasmaCore.Dialog {
 
         Timer {
             id: refreshTimer
-            interval: 50
+            interval: 250
             onTriggered: groupDialog.refreshCounter++
         }
 
