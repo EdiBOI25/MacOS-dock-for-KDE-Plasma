@@ -16,6 +16,7 @@ KCM.SimpleKCM {
     property alias cfg_showOnlyCurrentActivity: showOnlyCurrentActivityCheck.checked
     property alias cfg_showOnlyMinimized: showOnlyMinimizedCheck.checked
     property alias cfg_groupingStrategy: groupingStrategyCombo.currentIndex
+    property alias cfg_groupPreviewMaxColumns: groupPreviewMaxColumnsSpin.value
     property alias cfg_sortingStrategy: sortingStrategyCombo.currentIndex
     property alias cfg_separateLaunchers: separateLaunchersCheck.checked
     property alias cfg_middleClickAction: middleClickActionCombo.currentIndex
@@ -61,6 +62,13 @@ KCM.SimpleKCM {
             id: groupingStrategyCombo
             Kirigami.FormData.label: i18n("Grouping:")
             model: [i18n("Do not group"), i18n("By program name")]
+        }
+
+        QQC2.SpinBox {
+            id: groupPreviewMaxColumnsSpin
+            Kirigami.FormData.label: i18n("Preview columns:")
+            from: 3
+            to: 10
         }
 
         QQC2.ComboBox {

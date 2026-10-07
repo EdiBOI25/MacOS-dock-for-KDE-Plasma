@@ -247,7 +247,7 @@ PlasmaCore.Dialog {
 
         Grid {
             id: thumbnailGrid
-            columns: 3
+            columns: Plasmoid.configuration.groupPreviewMaxColumns
             spacing: Kirigami.Units.smallSpacing
 
         Repeater {
