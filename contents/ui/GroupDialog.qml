@@ -169,13 +169,8 @@ PlasmaCore.Dialog {
     mainItem: Item {
         id: mainContainer
 
-        // Size from the thumbnail count
-        readonly property int columns: Math.max(1, Math.min(windowRepeater.count, 3))
-        readonly property int rows: Math.max(1, Math.ceil(windowRepeater.count / 3))
-        readonly property int spacing: Kirigami.Units.smallSpacing
-
-        implicitWidth: columns * (groupDialog.thumbnailWidth + spacing) - spacing
-        implicitHeight: rows * (groupDialog.thumbnailHeight + Kirigami.Units.gridUnit * 2 + spacing) - spacing
+        implicitWidth: thumbnailGrid.implicitWidth
+        implicitHeight: thumbnailGrid.implicitHeight
         width: implicitWidth
         height: implicitHeight
 
@@ -250,11 +245,10 @@ PlasmaCore.Dialog {
             }
         }
 
-        Flow {
-            id: flowLayout
-            anchors.fill: parent
-
-            spacing: mainContainer.spacing
+        Grid {
+            id: thumbnailGrid
+            columns: 3
+            spacing: Kirigami.Units.smallSpacing
 
         Repeater {
             id: windowRepeater
