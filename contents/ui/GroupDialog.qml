@@ -31,7 +31,8 @@ PlasmaCore.Dialog {
         var count = tasksModel.count;
         for (var i = 0; i < count; i++) {
             var idx = tasksModel.makeModelIndex(i);
-            if (tasksModel.data(idx, TaskManager.AbstractTasksModel.IsLauncher)) {
+            if (tasksModel.data(idx, TaskManager.AbstractTasksModel.IsLauncher)
+                    || tasksModel.data(idx, TaskManager.AbstractTasksModel.IsStartup)) {
                 continue;
             }
             if (tasksModel.data(idx, TaskManager.AbstractTasksModel.AppId) === groupAppId) {
