@@ -20,7 +20,39 @@ PlasmaCore.Dialog {
     id: groupDialog
 
     property var tasksModel
+    property string groupAppId: ""
     property int groupIndex: -1
+
+    // Find the (non-launcher) top-level row that carries groupAppId
+    function resolveGroupIndex() {
+        if (!tasksModel || groupAppId === "") {
+            return -1;
+        }
+        var count = tasksModel.count;
+        for (var i = 0; i < count; i++) {
+            var idx = tasksModel.makeModelIndex(i);
+            if (tasksModel.data(idx, TaskManager.AbstractTasksModel.IsLauncher)) {
+                continue;
+            }
+            if (tasksModel.data(idx, TaskManager.AbstractTasksModel.AppId) === groupAppId) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    function updateGroupIndex() {
+        // Without an app id we can't re-resolve; keep the index we were given
+        if (groupAppId === "") {
+            return;
+        }
+        var resolved = resolveGroupIndex();
+        if (resolved !== groupIndex) {
+            groupIndex = resolved;
+        }
+    }
+
+    Component.onCompleted: updateGroupIndex()
 
     // Thumbnail dimensions
     readonly property int thumbnailWidth: Kirigami.Units.gridUnit * 12
@@ -40,6 +72,16 @@ PlasmaCore.Dialog {
 
         width: flowLayout.width
         height: flowLayout.height
+
+        // Keep groupIndex pointing at the group when rows are added/removed/moved
+        Connections {
+            target: groupDialog.tasksModel
+            function onRowsInserted() { groupDialog.updateGroupIndex(); }
+            function onRowsRemoved() { groupDialog.updateGroupIndex(); }
+            function onRowsMoved() { groupDialog.updateGroupIndex(); }
+            function onLayoutChanged() { groupDialog.updateGroupIndex(); }
+            function onModelReset() { groupDialog.updateGroupIndex(); }
+        }
 
         // Container-level drop area to catch drops that miss individual windows
         DropArea {

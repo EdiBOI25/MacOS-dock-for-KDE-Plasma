@@ -362,9 +362,11 @@ PlasmoidItem {
         }
         var task = taskList.getTaskAt(index);
         if (task) {
+            var appId = tasksModel.data(tasksModel.makeModelIndex(index), TaskManager.AbstractTasksModel.AppId) || "";
             activeGroupDialog = groupDialogComponent.createObject(root, {
                 visualParent: task,
                 tasksModel: tasksModel,
+                groupAppId: appId,
                 groupIndex: index,
             });
         }
