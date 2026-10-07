@@ -47,10 +47,7 @@ PlasmaCore.Dialog {
         if (groupAppId === "") {
             return;
         }
-        var resolved = resolveGroupIndex();
-        if (resolved !== groupIndex) {
-            groupIndex = resolved;
-        }
+        groupIndex = resolveGroupIndex();
     }
 
     // Bumped whenever the model changes. The model's rowCount()/data() have no
