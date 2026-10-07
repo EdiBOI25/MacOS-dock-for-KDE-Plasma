@@ -52,6 +52,32 @@ PlasmaCore.Dialog {
         }
     }
 
+    // Bumped whenever the model changes. The model's rowCount()/data() have no
+    // change notifications of their own, so bindings read this to re-evaluate.
+    property int refreshCounter: 0
+
+    function modelChanged() {
+        updateGroupIndex();
+        refreshCounter++;
+    }
+
+    function childCount() {
+        var _ = refreshCounter;
+        if (!tasksModel || groupIndex < 0) {
+            return 0;
+        }
+        return tasksModel.rowCount(tasksModel.makeModelIndex(groupIndex));
+    }
+
+    function childIndex(row) {
+        var _ = refreshCounter;
+        return tasksModel.index(row, 0, tasksModel.makeModelIndex(groupIndex));
+    }
+
+    function childData(row, role) {
+        return tasksModel.data(childIndex(row), role);
+    }
+
     Component.onCompleted: updateGroupIndex()
 
     // Thumbnail dimensions
@@ -73,14 +99,15 @@ PlasmaCore.Dialog {
         width: flowLayout.width
         height: flowLayout.height
 
-        // Keep groupIndex pointing at the group when rows are added/removed/moved
+        // Keep groupIndex pointing at the group and refresh the thumbnails when the model changes
         Connections {
             target: groupDialog.tasksModel
-            function onRowsInserted() { groupDialog.updateGroupIndex(); }
-            function onRowsRemoved() { groupDialog.updateGroupIndex(); }
-            function onRowsMoved() { groupDialog.updateGroupIndex(); }
-            function onLayoutChanged() { groupDialog.updateGroupIndex(); }
-            function onModelReset() { groupDialog.updateGroupIndex(); }
+            function onRowsInserted() { groupDialog.modelChanged(); }
+            function onRowsRemoved() { groupDialog.modelChanged(); }
+            function onRowsMoved() { groupDialog.modelChanged(); }
+            function onLayoutChanged() { groupDialog.modelChanged(); }
+            function onModelReset() { groupDialog.modelChanged(); }
+            function onDataChanged() { groupDialog.refreshCounter++; }
         }
 
         // Container-level drop area to catch drops that miss individual windows
@@ -151,27 +178,18 @@ PlasmaCore.Dialog {
         Repeater {
             id: windowRepeater
 
-            model: {
-                if (!groupDialog.tasksModel || groupDialog.groupIndex < 0) return 0;
-                var parentIdx = groupDialog.tasksModel.makeModelIndex(groupDialog.groupIndex);
-                return groupDialog.tasksModel.rowCount(parentIdx);
-            }
+            model: groupDialog.childCount()
 
             delegate: Item {
                 id: windowDelegate
                 width: groupDialog.thumbnailWidth
                 height: groupDialog.thumbnailHeight + titleLabel.height + Kirigami.Units.smallSpacing
 
-                property var childModelIndex: {
-                    var parentIdx = groupDialog.tasksModel.makeModelIndex(groupDialog.groupIndex);
-                    return groupDialog.tasksModel.index(index, 0, parentIdx);
-                }
-
-                property string windowTitle: groupDialog.tasksModel.data(childModelIndex, Qt.DisplayRole) || ""
-                property var windowIcon: groupDialog.tasksModel.data(childModelIndex, Qt.DecorationRole)
-                property bool isActive: groupDialog.tasksModel.data(childModelIndex, TaskManager.AbstractTasksModel.IsActive) || false
-                property bool isMinimized: groupDialog.tasksModel.data(childModelIndex, TaskManager.AbstractTasksModel.IsMinimized) || false
-                property var winIdList: groupDialog.tasksModel.data(childModelIndex, TaskManager.AbstractTasksModel.WinIdList) || []
+                property string windowTitle: groupDialog.childData(index, Qt.DisplayRole) || ""
+                property var windowIcon: groupDialog.childData(index, Qt.DecorationRole)
+                property bool isActive: groupDialog.childData(index, TaskManager.AbstractTasksModel.IsActive) || false
+                property bool isMinimized: groupDialog.childData(index, TaskManager.AbstractTasksModel.IsMinimized) || false
+                property var winIdList: groupDialog.childData(index, TaskManager.AbstractTasksModel.WinIdList) || []
                 property var winId: winIdList.length > 0 ? winIdList[0] : 0
                 property string visibleUuid: winIdList.length > 0 ? String(winIdList[0]) : ""
 
@@ -258,7 +276,7 @@ PlasmaCore.Dialog {
                         }
 
                         onClicked: {
-                            groupDialog.tasksModel.requestClose(windowDelegate.childModelIndex);
+                            groupDialog.tasksModel.requestClose(groupDialog.childIndex(index));
                         }
                     }
 
@@ -270,9 +288,9 @@ PlasmaCore.Dialog {
 
                         onClicked: function(mouse) {
                             if (mouse.button === Qt.MiddleButton) {
-                                groupDialog.tasksModel.requestClose(windowDelegate.childModelIndex);
+                                groupDialog.tasksModel.requestClose(groupDialog.childIndex(index));
                             } else {
-                                groupDialog.tasksModel.requestActivate(windowDelegate.childModelIndex);
+                                groupDialog.tasksModel.requestActivate(groupDialog.childIndex(index));
                                 groupDialog.visible = false;
                             }
                         }
@@ -307,7 +325,7 @@ PlasmaCore.Dialog {
                             groupDialog.anyDropHovered = false;
                             dropActivationTimer.stop();
                             if (drop.hasUrls) {
-                                groupDialog.tasksModel.requestOpenUrls(windowDelegate.childModelIndex, drop.urls);
+                                groupDialog.tasksModel.requestOpenUrls(groupDialog.childIndex(index), drop.urls);
                                 groupDialog.visible = false;
                                 drop.accepted = true;
                             }
@@ -320,7 +338,7 @@ PlasmaCore.Dialog {
                         interval: 400
                         onTriggered: {
                             // Activate window so user can see it
-                            groupDialog.tasksModel.requestActivate(windowDelegate.childModelIndex);
+                            groupDialog.tasksModel.requestActivate(groupDialog.childIndex(index));
                         }
                     }
 
