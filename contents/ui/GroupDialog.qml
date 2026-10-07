@@ -109,8 +109,15 @@ PlasmaCore.Dialog {
     mainItem: Item {
         id: mainContainer
 
-        width: flowLayout.width
-        height: flowLayout.height
+        // Size from the thumbnail count
+        readonly property int columns: Math.max(1, Math.min(windowRepeater.count, 3))
+        readonly property int rows: Math.max(1, Math.ceil(windowRepeater.count / 3))
+        readonly property int spacing: Kirigami.Units.smallSpacing
+
+        implicitWidth: columns * (groupDialog.thumbnailWidth + spacing) - spacing
+        implicitHeight: rows * (groupDialog.thumbnailHeight + Kirigami.Units.gridUnit * 2 + spacing) - spacing
+        width: implicitWidth
+        height: implicitHeight
 
         // Keep groupIndex pointing at the group and refresh the thumbnails when the model changes
         Connections {
@@ -176,20 +183,7 @@ PlasmaCore.Dialog {
             id: flowLayout
             anchors.fill: parent
 
-            width: {
-                var count = windowRepeater.count;
-                if (count <= 3) {
-                    return count * (groupDialog.thumbnailWidth + spacing) - spacing;
-                }
-                return 3 * (groupDialog.thumbnailWidth + spacing) - spacing;
-            }
-            height: {
-                var count = windowRepeater.count;
-                var rows = Math.ceil(count / 3);
-                return rows * (groupDialog.thumbnailHeight + Kirigami.Units.gridUnit * 2 + spacing) - spacing;
-            }
-
-            spacing: Kirigami.Units.smallSpacing
+            spacing: mainContainer.spacing
 
         Repeater {
             id: windowRepeater
