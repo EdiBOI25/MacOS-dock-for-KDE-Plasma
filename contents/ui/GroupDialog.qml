@@ -58,6 +58,7 @@ PlasmaCore.Dialog {
 
     function modelChanged() {
         updateGroupIndex();
+        syncWindows();
         refreshCounter++;
         closeIfNotGroup();
     }
@@ -74,24 +75,77 @@ PlasmaCore.Dialog {
         }
     }
 
-    function childCount() {
-        var _ = refreshCounter;
+    // Window ids of the group's children, in model order. A window's id is
+    // also its identity: it stays the same while its row number shifts.
+    function childKeys() {
+        var keys = [];
         if (!tasksModel || groupIndex < 0) {
-            return 0;
+            return keys;
         }
-        return tasksModel.rowCount(tasksModel.makeModelIndex(groupIndex));
+        var parentIdx = tasksModel.makeModelIndex(groupIndex);
+        var count = tasksModel.rowCount(parentIdx);
+        for (var i = 0; i < count; i++) {
+            var ids = tasksModel.data(tasksModel.index(i, 0, parentIdx), TaskManager.AbstractTasksModel.WinIdList);
+            keys.push(ids && ids.length > 0 ? String(ids[0]) : "");
+        }
+        return keys;
+    }
+
+    // Bring windowsModel in line with the group using single remove/move/insert
+    // operations, so delegates of untouched windows (and their live
+    // thumbnails) survive. Assigning a new Repeater model would rebuild all.
+    function syncWindows() {
+        var keys = childKeys();
+        for (var i = windowsModel.count - 1; i >= 0; i--) {
+            if (keys.indexOf(windowsModel.get(i).winKey) < 0) {
+                windowsModel.remove(i);
+            }
+        }
+        for (var j = 0; j < keys.length; j++) {
+            if (j < windowsModel.count && windowsModel.get(j).winKey === keys[j]) {
+                continue;
+            }
+            var from = -1;
+            for (var k = j + 1; k < windowsModel.count; k++) {
+                if (windowsModel.get(k).winKey === keys[j]) {
+                    from = k;
+                    break;
+                }
+            }
+            if (from >= 0) {
+                windowsModel.move(from, j, 1);
+            } else {
+                windowsModel.insert(j, { winKey: keys[j] });
+            }
+        }
+    }
+
+    // Current row of a window within the group, -1 if it is gone
+    function rowOfKey(key) {
+        var _ = refreshCounter;
+        return childKeys().indexOf(key);
     }
 
     function childIndex(row) {
         var _ = refreshCounter;
+        if (row < 0) {
+            return tasksModel.index(-1, -1);
+        }
         return tasksModel.index(row, 0, tasksModel.makeModelIndex(groupIndex));
     }
 
-    function childData(row, role) {
-        return tasksModel.data(childIndex(row), role);
+    function childIndexForKey(key) {
+        return childIndex(rowOfKey(key));
     }
 
-    Component.onCompleted: updateGroupIndex()
+    function childData(row, role) {
+        return row < 0 ? undefined : tasksModel.data(childIndex(row), role);
+    }
+
+    Component.onCompleted: {
+        updateGroupIndex();
+        syncWindows();
+    }
 
     // Thumbnail dimensions
     readonly property int thumbnailWidth: Kirigami.Units.gridUnit * 12
@@ -118,6 +172,11 @@ PlasmaCore.Dialog {
         implicitHeight: rows * (groupDialog.thumbnailHeight + Kirigami.Units.gridUnit * 2 + spacing) - spacing
         width: implicitWidth
         height: implicitHeight
+
+        // One entry per window in the group, keyed by window id
+        ListModel {
+            id: windowsModel
+        }
 
         // Keep groupIndex pointing at the group and refresh the thumbnails when the model changes
         Connections {
@@ -188,20 +247,25 @@ PlasmaCore.Dialog {
         Repeater {
             id: windowRepeater
 
-            model: groupDialog.childCount()
+            model: windowsModel
 
             delegate: Item {
                 id: windowDelegate
                 width: groupDialog.thumbnailWidth
                 height: groupDialog.thumbnailHeight + titleLabel.height + Kirigami.Units.smallSpacing
 
-                property string windowTitle: groupDialog.childData(index, Qt.DisplayRole) || ""
-                property var windowIcon: groupDialog.childData(index, Qt.DecorationRole)
-                property bool isActive: groupDialog.childData(index, TaskManager.AbstractTasksModel.IsActive) || false
-                property bool isMinimized: groupDialog.childData(index, TaskManager.AbstractTasksModel.IsMinimized) || false
-                property var winIdList: groupDialog.childData(index, TaskManager.AbstractTasksModel.WinIdList) || []
-                property var winId: winIdList.length > 0 ? winIdList[0] : 0
-                property string visibleUuid: winIdList.length > 0 ? String(winIdList[0]) : ""
+                // Stable identity of this delegate's window; its row can change
+                readonly property string key: winKey
+                property int row: groupDialog.rowOfKey(key)
+
+                property string windowTitle: groupDialog.childData(row, Qt.DisplayRole) || ""
+                property var windowIcon: groupDialog.childData(row, Qt.DecorationRole)
+                property bool isActive: groupDialog.childData(row, TaskManager.AbstractTasksModel.IsActive) || false
+                property bool isMinimized: groupDialog.childData(row, TaskManager.AbstractTasksModel.IsMinimized) || false
+                // Derived from the key (not looked up by row) so a thumbnail
+                // never switches windows and its stream isn't restarted
+                property var winId: Number(key) || 0
+                property string visibleUuid: key
 
                 // Thumbnail container
                 Rectangle {
@@ -286,7 +350,7 @@ PlasmaCore.Dialog {
                         }
 
                         onClicked: {
-                            groupDialog.tasksModel.requestClose(groupDialog.childIndex(index));
+                            groupDialog.tasksModel.requestClose(groupDialog.childIndexForKey(windowDelegate.key));
                         }
                     }
 
@@ -298,9 +362,9 @@ PlasmaCore.Dialog {
 
                         onClicked: function(mouse) {
                             if (mouse.button === Qt.MiddleButton) {
-                                groupDialog.tasksModel.requestClose(groupDialog.childIndex(index));
+                                groupDialog.tasksModel.requestClose(groupDialog.childIndexForKey(windowDelegate.key));
                             } else {
-                                groupDialog.tasksModel.requestActivate(groupDialog.childIndex(index));
+                                groupDialog.tasksModel.requestActivate(groupDialog.childIndexForKey(windowDelegate.key));
                                 groupDialog.visible = false;
                             }
                         }
@@ -335,7 +399,7 @@ PlasmaCore.Dialog {
                             groupDialog.anyDropHovered = false;
                             dropActivationTimer.stop();
                             if (drop.hasUrls) {
-                                groupDialog.tasksModel.requestOpenUrls(groupDialog.childIndex(index), drop.urls);
+                                groupDialog.tasksModel.requestOpenUrls(groupDialog.childIndexForKey(windowDelegate.key), drop.urls);
                                 groupDialog.visible = false;
                                 drop.accepted = true;
                             }
@@ -348,7 +412,7 @@ PlasmaCore.Dialog {
                         interval: 400
                         onTriggered: {
                             // Activate window so user can see it
-                            groupDialog.tasksModel.requestActivate(groupDialog.childIndex(index));
+                            groupDialog.tasksModel.requestActivate(groupDialog.childIndexForKey(windowDelegate.key));
                         }
                     }
 
