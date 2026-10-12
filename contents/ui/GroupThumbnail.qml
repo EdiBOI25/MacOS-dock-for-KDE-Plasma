@@ -31,6 +31,10 @@ Item {
     property var winId: winIdList.length > 0 ? winIdList[0] : 0
     property string winKey: winIdList.length > 0 ? String(winIdList[0]) : ""
 
+    // The uuid the stream is requested for; reset by the retry timer below
+    property string streamUuid: winKey
+    property int streamRetries: 0
+
     // Thumbnail container
     Rectangle {
         id: thumbnailContainer
@@ -55,7 +59,22 @@ Item {
 
         TaskManager.ScreencastingRequest {
             id: screencastRequest
-            uuid: thumbnail.winKey
+            uuid: thumbnail.streamUuid
+        }
+
+        // A window that just opened can be unknown to KWin's screencasting for a
+        // moment, which fails the request for good. Re-request a few times, then
+        // give up (some windows, e.g. minimized ones, can't be captured at all).
+        Timer {
+            interval: 250
+            repeat: true
+            running: KWindowSystem.isPlatformWayland && thumbnail.winKey !== ""
+                     && screencastRequest.nodeId === 0 && thumbnail.streamRetries < 12
+            onTriggered: {
+                thumbnail.streamRetries++;
+                thumbnail.streamUuid = "";
+                thumbnail.streamUuid = thumbnail.winKey;
+            }
         }
 
         // X11: PlasmaCore.WindowThumbnail
