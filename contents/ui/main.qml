@@ -329,7 +329,8 @@ PlasmoidItem {
                 if (index >= 0) {
                     var modelIndex = tasksModel.makeModelIndex(index);
                     var isGroupParent = tasksModel.data(modelIndex, TaskManager.AbstractTasksModel.IsGroupParent);
-                    if (isGroupParent) {
+                    var isSingleWindow = tasksModel.data(modelIndex, TaskManager.AbstractTasksModel.IsWindow);
+                    if (isGroupParent || (isSingleWindow && !Plasmoid.configuration.hidePreviewForSingleWindow)) {
                         groupHoverTimer.taskIndex = index;
                         groupHoverTimer.start();
                     } else {

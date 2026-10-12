@@ -17,6 +17,7 @@ KCM.SimpleKCM {
     property alias cfg_showOnlyMinimized: showOnlyMinimizedCheck.checked
     property alias cfg_groupingStrategy: groupingStrategyCombo.currentIndex
     property alias cfg_groupPreviewMaxColumns: groupPreviewMaxColumnsSpin.value
+    property alias cfg_hidePreviewForSingleWindow: hidePreviewForSingleWindowCheck.checked
     property alias cfg_sortingStrategy: sortingStrategyCombo.currentIndex
     property alias cfg_separateLaunchers: separateLaunchersCheck.checked
     property alias cfg_middleClickAction: middleClickActionCombo.currentIndex
@@ -69,6 +70,11 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("Preview columns:")
             from: 3
             to: 10
+        }
+
+        QQC2.CheckBox {
+            id: hidePreviewForSingleWindowCheck
+            text: i18n("Hide preview when only one window is open")
         }
 
         QQC2.ComboBox {

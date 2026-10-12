@@ -32,6 +32,10 @@
       <min>3</min>
       <max>10</max>
     </entry>
+    <entry name="hidePreviewForSingleWindow" type="Bool">
+      <label>Don't show the window preview for a task that has only one window (and close it when a group drops to one window).</label>
+      <default>true</default>
+    </entry>
     <entry name="groupingAppIdBlacklist" type="StringList">
       <label>The id's of applications that should not have their tasks grouped.</label>
       <default></default>
