@@ -346,7 +346,8 @@ PlasmoidItem {
         Timer {
             id: groupHoverTimer
             property int taskIndex: -1
-            interval: 400
+            // Short when a preview is already open, so moving along the dock switches quickly
+            interval: (root.activeGroupDialog && root.activeGroupDialog.visible) ? 100 : 250
             onTriggered: {
                 // Check if still hovering same task
                 if (taskIndex >= 0 && taskList.hoveredIndex === taskIndex) {
