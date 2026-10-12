@@ -73,12 +73,23 @@ PlasmaCore.Dialog {
 
     visible: true
     type: PlasmaCore.Dialog.PopupMenu
-    flags: Qt.WindowStaysOnTopHint
-    hideOnWindowDeactivate: true
+    // Never take focus: the preview is hover-driven and must not steal focus
+    // from the window the user is working in
+    flags: Qt.WindowStaysOnTopHint | Qt.WindowDoesNotAcceptFocus
     location: Plasmoid.location
 
     // Track if any window has drag hover active
     property bool anyDropHovered: false
+
+    // Whether the pointer is on the dock icon this preview belongs to. Without
+    // focus the dialog can't dismiss itself on deactivation, so it goes away
+    // once the pointer is on neither the icon nor the dialog.
+    property bool anchorHovered: true
+    onAnchorHoveredChanged: {
+        if (!anchorHovered) {
+            hideTimer.restart();
+        }
+    }
 
     mainItem: Item {
         id: mainContainer
@@ -130,7 +141,7 @@ PlasmaCore.Dialog {
             id: hoverHandler
             onHoveredChanged: {
                 if (!hovered) {
-                    hideTimer.start();
+                    hideTimer.restart();
                 }
             }
         }
@@ -140,7 +151,7 @@ PlasmaCore.Dialog {
             interval: 300
             onTriggered: {
                 // Don't hide if mouse is hovering or if drag is in progress
-                if (!hoverHandler.hovered && !groupDialog.anyDropHovered) {
+                if (!hoverHandler.hovered && !groupDialog.anchorHovered && !groupDialog.anyDropHovered) {
                     groupDialog.visible = false;
                 }
             }
@@ -195,9 +206,7 @@ PlasmaCore.Dialog {
     }
 
     onVisibleChanged: {
-        if (visible) {
-            groupDialog.requestActivate();
-        } else {
+        if (!visible) {
             destroy();
         }
     }

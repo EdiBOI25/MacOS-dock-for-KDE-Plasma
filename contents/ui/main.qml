@@ -368,6 +368,7 @@ PlasmoidItem {
                 visualParent: task,
                 tasksModel: tasksModel,
                 groupModelIndex: tasksModel.makeModelIndex(index),
+                anchorHovered: Qt.binding(function() { return taskList.getTaskAt(taskList.hoveredIndex) === task; }),
             });
         }
     }
