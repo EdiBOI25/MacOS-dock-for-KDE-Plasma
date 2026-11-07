@@ -5,12 +5,10 @@
 
 import QtQuick
 
-import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.components as PlasmaComponents3
 import org.kde.kirigami as Kirigami
 
 import org.kde.taskmanager as TaskManager
-import org.kde.kwindowsystem
 import org.kde.pipewire as PipeWire
 
 Item {
@@ -28,7 +26,6 @@ Item {
     property bool isActive: false
     property bool isMinimized: false
     property var winIdList: []
-    property var winId: winIdList.length > 0 ? winIdList[0] : 0
     property string winKey: winIdList.length > 0 ? String(winIdList[0]) : ""
 
     // The uuid the stream is requested for; reset by the retry timer below
@@ -48,13 +45,13 @@ Item {
         radius: Kirigami.Units.smallSpacing
         clip: true
 
-        // Wayland: PipeWire thumbnail
+        // Live window thumbnail streamed from KWin over PipeWire
         PipeWire.PipeWireSourceItem {
             id: pipeWireThumbnail
             anchors.fill: parent
             anchors.margins: 4
             nodeId: screencastRequest.nodeId
-            visible: KWindowSystem.isPlatformWayland && nodeId > 0
+            visible: nodeId > 0
         }
 
         TaskManager.ScreencastingRequest {
@@ -68,22 +65,13 @@ Item {
         Timer {
             interval: 250
             repeat: true
-            running: KWindowSystem.isPlatformWayland && thumbnail.winKey !== ""
+            running: thumbnail.winKey !== ""
                      && screencastRequest.nodeId === 0 && thumbnail.streamRetries < 12
             onTriggered: {
                 thumbnail.streamRetries++;
                 thumbnail.streamUuid = "";
                 thumbnail.streamUuid = thumbnail.winKey;
             }
-        }
-
-        // X11: PlasmaCore.WindowThumbnail
-        PlasmaCore.WindowThumbnail {
-            id: x11Thumbnail
-            anchors.fill: parent
-            anchors.margins: 4
-            winId: !KWindowSystem.isPlatformWayland ? thumbnail.winId : 0
-            visible: !KWindowSystem.isPlatformWayland && thumbnail.winId > 0
         }
 
         // Fallback icon when thumbnail not available
@@ -93,12 +81,7 @@ Item {
             width: Kirigami.Units.iconSizes.huge
             height: width
             source: thumbnail.windowIcon
-            visible: {
-                if (KWindowSystem.isPlatformWayland) {
-                    return screencastRequest.nodeId === 0;
-                }
-                return thumbnail.winId === 0;
-            }
+            visible: screencastRequest.nodeId === 0
             opacity: thumbnail.isMinimized ? 0.6 : 1.0
         }
 
