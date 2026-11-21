@@ -68,7 +68,7 @@ KCM.SimpleKCM {
         QQC2.SpinBox {
             id: groupPreviewMaxColumnsSpin
             Kirigami.FormData.label: i18n("Preview columns:")
-            from: 3
+            from: 1
             to: 10
         }
 

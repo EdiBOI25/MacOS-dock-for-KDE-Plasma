@@ -29,7 +29,7 @@
     <entry name="groupPreviewMaxColumns" type="Int">
       <label>Maximum number of columns in the window preview of a grouped task.</label>
       <default>3</default>
-      <min>3</min>
+      <min>1</min>
       <max>10</max>
     </entry>
     <entry name="hidePreviewForSingleWindow" type="Bool">
