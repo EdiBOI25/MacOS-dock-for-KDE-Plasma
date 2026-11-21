@@ -239,7 +239,6 @@ Item {
 
         onReleased: function(mouse) {
             if (dragActive) {
-                dragActive = false;
                 taskItem.isDragging = false;
             }
         }
