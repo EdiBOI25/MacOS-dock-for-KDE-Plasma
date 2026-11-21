@@ -464,10 +464,11 @@ PlasmoidItem {
         var task = taskList.getTaskAt(index);
         if (task) {
             var pos = task.mapToItem(previewAnchor.parent, 0, 0);
-            previewAnchor.x = root.vertical ? 0 : pos.x;
-            previewAnchor.y = root.vertical ? pos.y : 0;
-            previewAnchor.width = root.vertical ? previewAnchor.parent.width : task.width;
-            previewAnchor.height = root.vertical ? task.height : previewAnchor.parent.height;
+            var gap = Kirigami.Units.smallSpacing;
+            previewAnchor.x = root.vertical ? (Plasmoid.location === PlasmaCore.Types.RightEdge ? -gap : 0) : pos.x;
+            previewAnchor.y = root.vertical ? pos.y : (Plasmoid.location === PlasmaCore.Types.BottomEdge ? -gap : 0);
+            previewAnchor.width = root.vertical ? previewAnchor.parent.width + gap : task.width;
+            previewAnchor.height = root.vertical ? task.height : previewAnchor.parent.height + gap;
             previewAnchor.task = task;
             activeGroupDialog = groupDialogComponent.createObject(root, {
                 visualParent: previewAnchor,
