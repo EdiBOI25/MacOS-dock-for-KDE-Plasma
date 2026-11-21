@@ -243,6 +243,12 @@ Item {
             }
         }
 
+        onCanceled: {
+            if (dragActive) {
+                taskItem.isDragging = false;
+            }
+        }
+
         onClicked: function(mouse) {
             console.log("Task clicked, button:", mouse.button, "dragActive:", dragActive);
             if (dragActive) return;
