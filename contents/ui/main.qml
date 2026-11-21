@@ -310,12 +310,21 @@ PlasmoidItem {
             }
 
             onTaskDragHover: function(index, isDragHovered) {
+                var dialog = root.activeGroupDialog;
+                if (dialog && dialog.visualParent === taskList.getTaskAt(index)) {
+                    dialog.anyDropHovered = isDragHovered;
+                    return;
+                }
+
                 var modelIndex = tasksModel.makeModelIndex(index);
                 var isGroupParent = tasksModel.data(modelIndex, TaskManager.AbstractTasksModel.IsGroupParent);
 
                 if (isDragHovered && isGroupParent) {
                     // Show group dialog immediately for drag-n-drop
                     root.showGroupDialog(index);
+                    if (root.activeGroupDialog) {
+                        root.activeGroupDialog.anyDropHovered = true;
+                    }
                 }
             }
 

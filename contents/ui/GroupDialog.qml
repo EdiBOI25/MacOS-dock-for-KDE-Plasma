@@ -76,8 +76,13 @@ PlasmaCore.Dialog {
     flags: Qt.WindowStaysOnTopHint | Qt.WindowDoesNotAcceptFocus
     location: Plasmoid.location
 
-    // Track if any window has drag hover active
+    // Whether a file drag is over this preview or its dock icon
     property bool anyDropHovered: false
+    onAnyDropHoveredChanged: {
+        if (!anyDropHovered) {
+            hideTimer.restart();
+        }
+    }
 
     // Whether the pointer is on the dock icon this preview belongs to. Without
     // focus the dialog can't dismiss itself on deactivation, so it goes away
