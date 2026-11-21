@@ -194,6 +194,7 @@ PlasmaCore.Dialog {
         // group): the row itself has no children, so it is read directly
         Loader {
             active: groupDialog.showLast
+            visible: active
 
             sourceComponent: GroupThumbnail {
                 dialog: groupDialog
