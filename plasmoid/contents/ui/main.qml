@@ -302,7 +302,7 @@ PlasmoidItem {
 
             onTaskDragHover: function(index, isDragHovered) {
                 var dialog = root.activeGroupDialog;
-                if (dialog && dialog.visualParent === taskList.getTaskAt(index)) {
+                if (dialog && previewAnchor.task === taskList.getTaskAt(index)) {
                     dialog.anyDropHovered = isDragHovered;
                     return;
                 }
@@ -319,6 +319,12 @@ PlasmoidItem {
                 }
             }
 
+        }
+
+        // The previewed icon's slot, spanning the panel's full thickness
+        Item {
+            id: previewAnchor
+            property Item task: null
         }
 
         // Watch hoveredIndex changes for group preview
@@ -457,8 +463,14 @@ PlasmoidItem {
         }
         var task = taskList.getTaskAt(index);
         if (task) {
+            var pos = task.mapToItem(previewAnchor.parent, 0, 0);
+            previewAnchor.x = root.vertical ? 0 : pos.x;
+            previewAnchor.y = root.vertical ? pos.y : 0;
+            previewAnchor.width = root.vertical ? previewAnchor.parent.width : task.width;
+            previewAnchor.height = root.vertical ? task.height : previewAnchor.parent.height;
+            previewAnchor.task = task;
             activeGroupDialog = groupDialogComponent.createObject(root, {
-                visualParent: task,
+                visualParent: previewAnchor,
                 tasksModel: tasksModel,
                 groupModelIndex: tasksModel.makeModelIndex(index),
                 anchorHovered: Qt.binding(function() { return taskList.getTaskAt(taskList.hoveredIndex) === task; }),
