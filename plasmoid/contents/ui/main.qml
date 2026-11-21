@@ -233,9 +233,9 @@ PlasmoidItem {
             width: area.width
             height: area.height
             radius: 20
-            color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.6)
-            border.width: 1
-            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.15)
+            color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, Plasmoid.configuration.dockBackgroundOpacity / 100)
+            border.width: Plasmoid.configuration.dockBorderOpacity > 0 ? 1 : 0
+            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, Plasmoid.configuration.dockBorderOpacity / 100)
         }
 
         TaskList {

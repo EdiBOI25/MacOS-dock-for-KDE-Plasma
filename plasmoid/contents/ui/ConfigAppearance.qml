@@ -25,6 +25,8 @@ KCM.SimpleKCM {
     property alias cfg_antiClip: antiClipCheck.checked
     property alias cfg_iconSizePercent: iconSizePercentSlider.value
     property alias cfg_keepPanelBackground: keepPanelBackgroundCheck.checked
+    property alias cfg_dockBackgroundOpacity: dockBackgroundOpacitySlider.value
+    property alias cfg_dockBorderOpacity: dockBorderOpacitySlider.value
 
     // Convert between UI scale (1-10) and real zoom factor (1.0-1.24)
     // UI 1 = 1.0x (no zoom), UI 10 = 1.24x (max zoom without clipping)
@@ -211,6 +213,38 @@ KCM.SimpleKCM {
             id: keepPanelBackgroundCheck
             Kirigami.FormData.label: i18n("Panel background:")
             text: i18n("Keep the panel background and shadow")
+        }
+
+        QQC2.Slider {
+            id: dockBackgroundOpacitySlider
+            Kirigami.FormData.label: i18n("Dock background opacity:")
+            enabled: !keepPanelBackgroundCheck.checked
+            from: 0
+            to: 100
+            stepSize: 5
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Background:")
+            QQC2.Label {
+                text: dockBackgroundOpacitySlider.value + " %"
+            }
+        }
+
+        QQC2.Slider {
+            id: dockBorderOpacitySlider
+            Kirigami.FormData.label: i18n("Dock border opacity:")
+            enabled: !keepPanelBackgroundCheck.checked
+            from: 0
+            to: 100
+            stepSize: 5
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Border:")
+            QQC2.Label {
+                text: dockBorderOpacitySlider.value === 0 ? i18n("Off") : dockBorderOpacitySlider.value + " %"
+            }
         }
     }
 }

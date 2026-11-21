@@ -119,6 +119,18 @@
       <label>Whether to keep Plasma's panel background and shadow while the dock masks its own region, instead of leaving it to a compositor effect.</label>
       <default>true</default>
     </entry>
+    <entry name="dockBackgroundOpacity" type="Int">
+      <label>Opacity in percent of the dock's own tinted background, drawn when the panel background is not kept.</label>
+      <default>60</default>
+      <min>0</min>
+      <max>100</max>
+    </entry>
+    <entry name="dockBorderOpacity" type="Int">
+      <label>Opacity in percent of the dock background's 1 px border; 0 hides it.</label>
+      <default>15</default>
+      <min>0</min>
+      <max>100</max>
+    </entry>
 
     <!-- Anti-clip Setting -->
     <entry name="antiClip" type="Bool">
