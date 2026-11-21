@@ -332,7 +332,7 @@ PlasmoidItem {
             target: taskList
             function onHoveredIndexChanged() {
                 var index = taskList.hoveredIndex;
-                if (index >= 0) {
+                if (index >= 0 && !taskList.dragInProgress) {
                     var modelIndex = tasksModel.makeModelIndex(index);
                     var isGroupParent = tasksModel.data(modelIndex, TaskManager.AbstractTasksModel.IsGroupParent);
                     var isSingleWindow = tasksModel.data(modelIndex, TaskManager.AbstractTasksModel.IsWindow);
@@ -344,6 +344,14 @@ PlasmoidItem {
                     }
                 } else {
                     groupHoverTimer.stop();
+                }
+            }
+            function onDragInProgressChanged() {
+                if (taskList.dragInProgress) {
+                    groupHoverTimer.stop();
+                    if (root.activeGroupDialog) {
+                        root.activeGroupDialog.visible = false;
+                    }
                 }
             }
         }
