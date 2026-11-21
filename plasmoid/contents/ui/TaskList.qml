@@ -381,6 +381,14 @@ Item {
         function onDataChanged() {
             taskListRoot.modelUpdateCounter++;
         }
+        // Republishes the group's rect for a window joining it
+        function onRowsInserted(parent) {
+            const task = parent.valid ? taskRepeater.itemAt(parent.row) : null;
+            if (task) {
+                task.lastIconGeometry = Qt.rect(0, 0, -1, -1);
+                taskListRoot.schedulePublishIconGeometries();
+            }
+        }
     }
 
     readonly property int baseIconSize: Math.max(panelThickness - Kirigami.Units.smallSpacing * 4, Kirigami.Units.iconSizes.medium)
