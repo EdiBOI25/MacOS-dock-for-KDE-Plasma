@@ -222,6 +222,22 @@ PlasmoidItem {
             keepBackground: Plasmoid.configuration.keepPanelBackground
         }
 
+        // Dock background drawn inside the plugin's mask
+        Rectangle {
+            readonly property rect area: dockMask.isActive && dockMask.nativeBackground
+                ? parent.mapFromItem(dockMask.nativeBackground, dockMask.regionRect)
+                : Qt.rect(0, 0, 0, 0)
+            visible: dockMask.isActive
+            x: area.x
+            y: area.y
+            width: area.width
+            height: area.height
+            radius: 20
+            color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.6)
+            border.width: 1
+            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.15)
+        }
+
         TaskList {
             id: taskList
             // Centered only when masking its own region
