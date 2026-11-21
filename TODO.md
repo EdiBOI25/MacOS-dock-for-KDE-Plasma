@@ -10,10 +10,13 @@
 - [x] 6. Closing an instance from the dock preview doesn't close that preview tab — it just replaces the preview with the app icon
 - [ ] 7. When an app is opened, its "dot" is colored in a dark color. Check how it looks when it's replaced with a lighter system color
 - [ ] 8. Sometimes, a newly opened app's icon has only one half displayed. A guess is that the panel doesn't extend sometimes to make room for the new task/icon
-- [ ] 9. Reordering icons also minimizes them (if opened) or opens them (if minimized).This seems to happen to unpinned icons only
+- [x] 9. Reordering icons also minimizes them (if opened) or opens them (if minimized).This seems to happen to unpinned icons only
 - [ ] 10. Right clicking an icon doesn't display its "actions". For example, the right click menu for Firefox doesn't display the "New Tab" and "New Private Tab" options.
 - [ ] 11. The dock isn't centered: the icons are aligned to the left, so a panel spacer is currently needed to center them. Possible causes: the task list is anchored to `parent.left` in `main.qml` while "Fill available space" is on by default, and the launcher drop gutter only adds space after the last icon
 
 ## Future tasks
 
-- [ ] Add "sliding" animation for when moving icons on the taskbar (change position)
+- [ ] Change the focused window's dot color; it currently shows a darkened system color (see known issue 7)
+- [ ] Research and add a dragging animation when reordering icons ("sliding" into the new position); currently the icon just jumps
+- [ ] Research and add an animation when an app is triggered (e.g. a link opened from another app launches the browser): pulsing, a macOS-style bounce, or similar. Currently the only sign is the dot turning orange
+- [ ] Research whether the dot under the active app should become a short line
