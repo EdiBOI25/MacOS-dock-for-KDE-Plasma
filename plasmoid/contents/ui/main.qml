@@ -457,11 +457,14 @@ PlasmoidItem {
     }
 
     function showGroupDialog(index) {
+        var task = taskList.getTaskAt(index);
+        if (activeGroupDialog && activeGroupDialog.visible && previewAnchor.task === task) {
+            return;
+        }
         if (activeGroupDialog) {
             activeGroupDialog.visible = false;
             activeGroupDialog = null;
         }
-        var task = taskList.getTaskAt(index);
         if (task) {
             var pos = task.mapToItem(previewAnchor.parent, 0, 0);
             var gap = Kirigami.Units.smallSpacing;
