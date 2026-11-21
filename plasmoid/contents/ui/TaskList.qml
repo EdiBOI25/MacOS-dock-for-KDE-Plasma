@@ -533,8 +533,8 @@ Item {
             shifts: shifts,
             rises: rises,
             length: restLength,
-            leadingGrowth: 0,
-            trailingGrowth: 0
+            leadingGrowth: count > 0 ? Math.max(0, cellSize * (zooms[0] - 1) / 2 - shifts[0]) : 0,
+            trailingGrowth: count > 0 ? Math.max(0, cellSize * (zooms[count - 1] - 1) / 2 + shifts[count - 1]) : 0
         };
     }
 
