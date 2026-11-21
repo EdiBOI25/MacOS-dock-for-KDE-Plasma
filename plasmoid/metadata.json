@@ -17,7 +17,7 @@
         "Id": "local.icontasks2-by-edi",
         "License": "GPL-2.0+",
         "Name": "Edi's Icons-Only Task Manager 2",
-        "Version": "1.3",
+        "Version": "1.5.0",
         "Website": "https://github.com/EdiBOI25/MacOS-dock-for-KDE-Plasma"
     },
     "X-Plasma-API-Minimum-Version": "6.0",

@@ -15,6 +15,8 @@ KCM.SimpleKCM {
     property real cfg_zoomFactor: 1.1866666666666665
     property alias cfg_zoomDuration: zoomDurationSlider.value
     property alias cfg_zoomNeighbors: zoomNeighborsCheck.checked
+    property alias cfg_growingDock: growingDockCheck.checked
+    property alias cfg_growOnMagnifiedSide: growOnMagnifiedSideCheck.checked
     property real cfg_neighborZoomFactor: 1.1066666666666667
     property alias cfg_parabolicEnabled: parabolicEnabledCheck.checked
     property alias cfg_maxParabolicRise: parabolicRiseSlider.value
@@ -22,6 +24,7 @@ KCM.SimpleKCM {
     property alias cfg_fill: fillCheck.checked
     property alias cfg_antiClip: antiClipCheck.checked
     property alias cfg_iconSizePercent: iconSizePercentSlider.value
+    property alias cfg_keepPanelBackground: keepPanelBackgroundCheck.checked
 
     // Convert between UI scale (1-10) and real zoom factor (1.0-1.24)
     // UI 1 = 1.0x (no zoom), UI 10 = 1.24x (max zoom without clipping)
@@ -115,6 +118,20 @@ KCM.SimpleKCM {
             }
         }
 
+        QQC2.CheckBox {
+            id: growingDockCheck
+            Kirigami.FormData.label: i18n("Dock growth:")
+            text: i18n("Icons push their neighbours apart")
+            enabled: zoomEnabledCheck.checked
+        }
+
+        QQC2.CheckBox {
+            id: growOnMagnifiedSideCheck
+            Kirigami.FormData.label: i18n("Growth side:")
+            text: i18n("Grow only on the magnified side (macOS style)")
+            enabled: zoomEnabledCheck.checked && growingDockCheck.checked
+        }
+
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
             Kirigami.FormData.label: i18n("Parabolic Effect (macOS Style)")
@@ -188,6 +205,12 @@ KCM.SimpleKCM {
             QQC2.Label {
                 text: iconSizePercentSlider.value + "%"
             }
+        }
+
+        QQC2.CheckBox {
+            id: keepPanelBackgroundCheck
+            Kirigami.FormData.label: i18n("Panel background:")
+            text: i18n("Keep the panel background and shadow")
         }
     }
 }

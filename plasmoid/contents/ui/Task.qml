@@ -34,11 +34,18 @@ Item {
     property int taskIndex: 0
     property var iconSource: ""
     property string taskName: ""
+    // Scaled icon box. Kirigami.Icon does not expose mapToItem, so geometry
+    // is taken from this plain Item. Its scale is the painted size.
+    property alias iconItem: iconContainer
     property bool isActive: false
     property bool isMinimized: false
     property bool isLauncher: false
+    property bool isStartup: false
     property bool isDemandingAttention: false
     property bool isGroupParent: false
+
+    // Last rectangle sent to KWin. Width -1 means "never published".
+    property rect lastIconGeometry: Qt.rect(0, 0, -1, -1)
 
     // Group properties
     property int groupChildCount: 0
@@ -91,43 +98,15 @@ Item {
     property int baseSize: 48
     property bool zoomEnabled: true
     property real maxZoomFactor: 1.24  // Max 1.24 to avoid clipping on floating panels
-    property real targetZoom: 1.0
     property int zoomDuration: 120
-    property bool isTransitioning: false  // True when mouse is in task area (use faster animation)
 
     // Parabolic rise properties
     property bool parabolicEnabled: true
     property int maxParabolicRise: 12
-    property real targetRise: 0
 
-    // Frozen zoom/rise: tracks targetZoom while mouse is in area,
-    // freezes at last value when mouse leaves (for smooth exit animation)
-    property real activeZoom: 1.0
-    property real activeRise: 0
-
-    onTargetZoomChanged: {
-        if (isTransitioning) activeZoom = targetZoom;
-    }
-    onTargetRiseChanged: {
-        if (isTransitioning) activeRise = targetRise;
-    }
-    onIsTransitioningChanged: {
-        if (isTransitioning) {
-            // Reset frozen values at start of new hover
-            activeZoom = targetZoom;
-            activeRise = targetRise;
-        }
-    }
-
-    // Zoom multiplier: animates 0→1 on enter, 1→0 on exit.
-    property real zoomMultiplier: isTransitioning ? 1.0 : 0.0
-    Behavior on zoomMultiplier {
-        NumberAnimation { duration: taskItem.zoomDuration; easing.type: Easing.OutCubic }
-    }
-
-    // Computed display values: instant response via activeZoom, smooth enter/exit via multiplier
-    readonly property real displayZoom: 1.0 + (activeZoom - 1.0) * zoomMultiplier
-    readonly property real displayRise: activeRise * zoomMultiplier
+    // Set by TaskList
+    property real displayZoom: 1.0
+    property real displayRise: 0
 
     // Hover state
     property bool hovered: mouseArea.containsMouse
@@ -152,7 +131,6 @@ Item {
         hoverChanged(hovered);
     }
 
-    // Fixed size for stable layout - zoom is purely visual (no layout shifts)
     width: baseSize
     height: baseSize
 
@@ -288,18 +266,15 @@ Item {
     Item {
         id: iconContainer
         z: 1
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        // Rise direction: away from the panel edge
-        anchors.verticalCenterOffset: {
-            if (taskItem.vertical) return 0;
+        opacity: taskItem.isDragging ? 0.4 : 1.0
+        readonly property real riseOffset: {
+            if (taskItem.vertical) {
+                return taskItem.panelOnLeft ? taskItem.displayRise : -taskItem.displayRise;
+            }
             return taskItem.panelOnTop ? taskItem.displayRise : -taskItem.displayRise;
         }
-        anchors.horizontalCenterOffset: {
-            if (!taskItem.vertical) return 0;
-            return taskItem.panelOnLeft ? taskItem.displayRise : -taskItem.displayRise;
-        }
-        opacity: taskItem.isDragging ? 0.4 : 1.0
+        x: (parent.width - width) / 2 + (taskItem.vertical ? riseOffset : 0)
+        y: (parent.height - height) / 2 + (taskItem.vertical ? 0 : riseOffset)
 
         // Render icon at maximum possible size for crisp quality at any zoom level
         property int maxSize: Math.round(baseSize * maxZoomFactor)
@@ -329,11 +304,10 @@ Item {
 
         width: containerSize
         height: containerSize
-        scale: targetScale  // Animated via displayZoom Behavior
+        scale: targetScale
 
-        // Cache rendered icon in a texture to eliminate pixel jitter during zoom animation
-        layer.enabled: true
-        layer.smooth: true
+        // The icon is already drawn at the max zoom size and only transformed.
+        // An FBO layer lags one frame behind the moving cell and reads as shake.
 
         Kirigami.Icon {
             id: icon
@@ -344,6 +318,12 @@ Item {
             height: Math.round(parent.height * taskItem.iconSizePercent / 100 * 0.88)
             source: taskItem.iconSource
             fallback: "application-x-executable"
+            // Kirigami 6.30 snaps the icon quad to device pixels after the
+            // parent scale. A fixed texture keeps that snap off the animation,
+            // and iconContainer.scale moves the texture continuously.
+            roundToIconSize: false
+            layer.enabled: true
+            layer.smooth: true
         }
 
         // Attention animation
@@ -360,10 +340,8 @@ Item {
     Rectangle {
         id: dropPlate
         z: 0
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.verticalCenterOffset: iconContainer.anchors.verticalCenterOffset
-        anchors.horizontalCenterOffset: iconContainer.anchors.horizontalCenterOffset
+        x: (parent.width - width) / 2 + (taskItem.vertical ? iconContainer.riseOffset : 0)
+        y: (parent.height - height) / 2 + (taskItem.vertical ? 0 : iconContainer.riseOffset)
         readonly property real visualIconSize: {
             const extras = iconContainer.animatedPressScale * iconContainer.attentionScale * iconContainer.dropScale;
             return taskItem.baseSize * taskItem.displayZoom * (taskItem.iconSizePercent / 100.0) * 0.88 * extras;
@@ -421,23 +399,34 @@ Item {
         }
     }
 
-    // Running indicator - outside iconContainer so it doesn't scale
-    // Positioned at the panel edge side
+    // Center of the painted icon. Anchors snap a 5px dot to whole pixels
+    // while this center moves fractionally, which reads as a stutter.
+    readonly property real iconAlongCenter: vertical
+            ? iconContainer.y + iconContainer.height / 2
+            : iconContainer.x + iconContainer.width / 2
+    readonly property int groupDotCount: Math.max(isGroupParent ? 2 : 0, Math.min(groupChildCount, 5))
+
+    // Running indicator. Sits on the panel edge and does not scale with the icon.
     Rectangle {
         id: runningIndicator
-        anchors.horizontalCenter: taskItem.vertical ? undefined : parent.horizontalCenter
-        anchors.verticalCenter: taskItem.vertical ? parent.verticalCenter : undefined
-        anchors.bottom: (!taskItem.vertical && taskItem.panelOnBottom) ? parent.bottom : undefined
-        anchors.top: (!taskItem.vertical && taskItem.panelOnTop) ? parent.top : undefined
-        anchors.left: (taskItem.vertical && taskItem.panelOnLeft) ? parent.left : undefined
-        anchors.right: (taskItem.vertical && taskItem.panelOnRight) ? parent.right : undefined
-        anchors.bottomMargin: taskItem.panelOnBottom ? -5 : 0
-        anchors.topMargin: taskItem.panelOnTop ? -5 : 0
-        anchors.leftMargin: taskItem.panelOnLeft ? -5 : 0
-        anchors.rightMargin: taskItem.panelOnRight ? -5 : 0
+        antialiasing: true
         width: 5
-        height: width
-        radius: width / 2
+        height: 5
+        radius: 2.5
+        x: {
+            if (!taskItem.vertical)
+                return taskItem.iconAlongCenter - width / 2;
+            if (taskItem.panelOnLeft)
+                return -width;
+            return parent.width;
+        }
+        y: {
+            if (taskItem.vertical)
+                return taskItem.iconAlongCenter - height / 2;
+            if (taskItem.panelOnTop)
+                return -height;
+            return parent.height;
+        }
         visible: !taskItem.isLauncher && !taskItem.isGroupParent
         color: taskItem.isActive ? Kirigami.Theme.highlightColor :
                taskItem.isDemandingAttention ? Kirigami.Theme.negativeTextColor :
@@ -445,28 +434,40 @@ Item {
         opacity: taskItem.isActive ? 1.0 : 0.5
     }
 
-    // Group indicator - outside iconContainer so it doesn't scale
-    Row {
+    // Group indicator. Same edge, same center, no Row (it lays children out on integers).
+    Item {
         id: groupIndicator
-        anchors.horizontalCenter: taskItem.vertical ? undefined : parent.horizontalCenter
-        anchors.verticalCenter: taskItem.vertical ? parent.verticalCenter : undefined
-        anchors.bottom: (!taskItem.vertical && taskItem.panelOnBottom) ? parent.bottom : undefined
-        anchors.top: (!taskItem.vertical && taskItem.panelOnTop) ? parent.top : undefined
-        anchors.left: (taskItem.vertical && taskItem.panelOnLeft) ? parent.left : undefined
-        anchors.right: (taskItem.vertical && taskItem.panelOnRight) ? parent.right : undefined
-        anchors.bottomMargin: taskItem.panelOnBottom ? -5 : 0
-        anchors.topMargin: taskItem.panelOnTop ? -5 : 0
-        anchors.leftMargin: taskItem.panelOnLeft ? -5 : 0
-        anchors.rightMargin: taskItem.panelOnRight ? -5 : 0
-        spacing: 3
+        readonly property real dot: 4
+        readonly property real gap: 3
+        readonly property real span: taskItem.groupDotCount * dot + Math.max(0, taskItem.groupDotCount - 1) * gap
         visible: taskItem.isGroupParent
+        width: taskItem.vertical ? dot : span
+        height: taskItem.vertical ? span : dot
+        x: {
+            if (!taskItem.vertical)
+                return taskItem.iconAlongCenter - width / 2;
+            if (taskItem.panelOnLeft)
+                return -width;
+            return parent.width;
+        }
+        y: {
+            if (taskItem.vertical)
+                return taskItem.iconAlongCenter - height / 2;
+            if (taskItem.panelOnTop)
+                return -height;
+            return parent.height;
+        }
 
         Repeater {
-            model: Math.max(taskItem.isGroupParent ? 2 : 0, Math.min(taskItem.groupChildCount, 5))
+            model: taskItem.groupDotCount
             Rectangle {
-                width: 4
-                height: width
-                radius: width / 2
+                required property int index
+                antialiasing: true
+                width: groupIndicator.dot
+                height: groupIndicator.dot
+                radius: groupIndicator.dot / 2
+                x: taskItem.vertical ? 0 : index * (groupIndicator.dot + groupIndicator.gap)
+                y: taskItem.vertical ? index * (groupIndicator.dot + groupIndicator.gap) : 0
                 color: index === taskItem.activeChildIndex ? Kirigami.Theme.highlightColor : Kirigami.Theme.textColor
                 opacity: index === taskItem.activeChildIndex ? 1.0 : 0.4
             }

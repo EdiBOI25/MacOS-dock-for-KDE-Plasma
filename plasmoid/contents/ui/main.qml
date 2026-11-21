@@ -212,13 +212,22 @@ PlasmoidItem {
             }
         }
 
+        DockMask {
+            id: dockMask
+            dock: taskList
+            rowLength: taskList.restLength
+            leadingGrowth: taskList.maskLeadingGrowth
+            trailingGrowth: taskList.maskTrailingGrowth
+            vertical: root.vertical
+            keepBackground: Plasmoid.configuration.keepPanelBackground
+        }
+
         TaskList {
             id: taskList
-            // Fixed positioning - no centerIn to avoid recalculation on hover
-            anchors.left: root.vertical ? undefined : parent.left
-            anchors.top: root.vertical ? parent.top : undefined
-            anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
-            anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
+            // Centered only when masking its own region
+            // Not anchors: left and horizontalCenter at once while switching drops the width binding
+            x: root.vertical || dockMask.isActive ? Math.round((parent.width - width) / 2) : 0
+            y: !root.vertical || dockMask.isActive ? Math.round((parent.height - height) / 2) : 0
 
             // Pass the actual panel size to TaskList
             width: root.vertical ? parent.width : implicitWidth
@@ -235,6 +244,8 @@ PlasmoidItem {
             showAudioIndicator: root.showAudioIndicator
             allowVolumeControl: root.allowVolumeControl
             zoomNeighbors: root.zoomNeighbors
+            growingDock: Plasmoid.configuration.growingDock
+            growOnMagnifiedSide: Plasmoid.configuration.growOnMagnifiedSide
             neighborZoomFactor: root.neighborZoomFactor
             iconSpacing: Plasmoid.configuration.iconSpacing
             widgetHovered: widgetHoverHandler.hovered
@@ -249,29 +260,10 @@ PlasmoidItem {
             availableSpace: root.vertical ? root.height : root.width
 
             onTaskClicked: function(index, button, modifiers) {
-                var modelIndex = tasksModel.makeModelIndex(index);
-                var isActive = tasksModel.data(modelIndex, TaskManager.AbstractTasksModel.IsActive);
-                var isLauncher = tasksModel.data(modelIndex, TaskManager.AbstractTasksModel.IsLauncher);
-                var isMinimized = tasksModel.data(modelIndex, TaskManager.AbstractTasksModel.IsMinimized);
-                var isGroupParent = tasksModel.data(modelIndex, TaskManager.AbstractTasksModel.IsGroupParent);
-
-                taskList.publishIconGeometry(taskList.getTaskAt(index));
-
                 if (button === Qt.LeftButton) {
-                    if (modifiers & Qt.ShiftModifier) {
-                        tasksModel.requestNewInstance(modelIndex);
-                    } else if (isGroupParent) {
-                        // Cycle through group windows on click
-                        root.cycleGroupWindows(index);
-                    } else if (isLauncher) {
-                        tasksModel.requestActivate(modelIndex);
-                    } else if (isActive) {
-                        tasksModel.requestToggleMinimized(modelIndex);
-                    } else {
-                        tasksModel.requestActivate(modelIndex);
-                    }
+                    root.activateEntry(index, modifiers);
                 } else if (button === Qt.MiddleButton) {
-                    handleMiddleClick(modelIndex);
+                    handleMiddleClick(tasksModel.makeModelIndex(index));
                 }
             }
 
@@ -281,7 +273,6 @@ PlasmoidItem {
                 var task = taskList.getTaskAt(index);
                 console.log("Task:", task, "ModelIndex:", modelIndex);
                 if (task) {
-                    taskList.publishIconGeometry(task);
                     var menu = root.createContextMenu(task, modelIndex);
                     console.log("Menu created:", menu);
                     if (menu) {
@@ -366,6 +357,99 @@ PlasmoidItem {
         }
     }
 
+    // Screen output this dock sits on, used to ignore Meta+number
+    // presses aimed at a dock on another monitor.
+    readonly property string screenOutputName: {
+        const geo = Plasmoid.containment.screenGeometry;
+        if (!geo) {
+            return "";
+        }
+        const screens = Qt.application.screens;
+        for (let i = 0; i < screens.length; ++i) {
+            const screen = screens[i];
+            if (Math.abs(screen.virtualX - geo.x) < 2 && Math.abs(screen.virtualY - geo.y) < 2) {
+                return screen.name;
+            }
+        }
+        return "";
+    }
+
+    // Plasmashell looks this up as activateTaskAtIndex(QVariant).
+    // The argument must stay untyped; "index: int" is a different method.
+    property int lastShortcutIndex: -2
+    property double lastShortcutAt: 0
+
+    function activateTaskAtIndex(index) {
+        let i = Number(index);
+        if (!isFinite(i)) {
+            return;
+        }
+        i = Math.trunc(i);
+        const now = Date.now();
+        if (i === lastShortcutIndex && (now - lastShortcutAt) < 250) {
+            return;
+        }
+        lastShortcutAt = now;
+        lastShortcutIndex = i;
+        activateEntry(i, 0);
+    }
+
+    function activateEntry(index, modifiers) {
+        if (index < 0 || index >= tasksModel.count) {
+            return;
+        }
+        const modelIndex = tasksModel.makeModelIndex(index);
+        const isActive = tasksModel.data(modelIndex, TaskManager.AbstractTasksModel.IsActive);
+        const isLauncher = tasksModel.data(modelIndex, TaskManager.AbstractTasksModel.IsLauncher);
+        const isGroupParent = tasksModel.data(modelIndex, TaskManager.AbstractTasksModel.IsGroupParent);
+
+        if (modifiers & Qt.ShiftModifier) {
+            tasksModel.requestNewInstance(modelIndex);
+            return;
+        }
+        // Geometry must not block launch or minimize if publishing fails.
+        try {
+            taskList.publishIconGeometries();
+        } catch (error) {
+            console.warn("Icons-Only Task Manager 2: icon geometry skipped:", error);
+        }
+        if (isGroupParent) {
+            root.cycleGroupWindows(index);
+        } else if (isLauncher || !isActive) {
+            tasksModel.requestActivate(modelIndex);
+        } else {
+            tasksModel.requestToggleMinimized(modelIndex);
+        }
+    }
+
+    Loader {
+        id: taskShortcutLoader
+        visible: false
+        width: 0
+        height: 0
+        source: "TaskShortcuts.qml"
+        onStatusChanged: {
+            if (status === Loader.Error) {
+                console.warn("Icons-Only Task Manager 2: Meta+number helper failed to load:", errorString);
+            }
+        }
+        onLoaded: {
+            if (!item) {
+                return;
+            }
+            item.entryActivated.connect(function(index) {
+                root.activateTaskAtIndex(index);
+            });
+        }
+    }
+
+    Binding {
+        target: taskShortcutLoader.item
+        when: taskShortcutLoader.item !== null
+        property: "outputName"
+        value: root.screenOutputName
+    }
+
     function showGroupDialog(index) {
         if (activeGroupDialog) {
             activeGroupDialog.visible = false;
@@ -445,49 +529,17 @@ PlasmoidItem {
         }
     }
 
-    // Republish minimize targets after a delay
-    Timer {
-        id: panelSettleTimer
-        interval: 500
-        onTriggered: taskList.publishIconGeometries()
-    }
-
     Connections {
         target: Plasmoid
         function onLocationChanged() {
-            panelSettleTimer.restart();
+            taskList.schedulePublishIconGeometries();
         }
     }
 
     Connections {
         target: Plasmoid.containment
         function onScreenGeometryChanged() {
-            panelSettleTimer.restart();
-        }
-    }
-
-    // Watch the whole parent panel
-    readonly property var sceneAncestors: {
-        const chain = [];
-        for (let item = root; item; item = item.parent) chain.push(item);
-        return chain;
-    }
-    onSceneAncestorsChanged: panelSettleTimer.restart()
-
-    Instantiator {
-        model: root.sceneAncestors
-        delegate: Connections {
-            required property var modelData
-            target: modelData
-            function onXChanged() { panelSettleTimer.restart(); }
-            function onYChanged() { panelSettleTimer.restart(); }
-        }
-    }
-
-    Connections {
-        target: root.Window.window
-        function onVisibleChanged() {
-            panelSettleTimer.restart();
+            taskList.schedulePublishIconGeometries();
         }
     }
 
