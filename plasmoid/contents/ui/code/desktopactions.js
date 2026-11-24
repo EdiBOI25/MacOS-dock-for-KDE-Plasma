@@ -18,11 +18,12 @@ act != "" && k == "Name[" lang "]" { lname[act] = v }
 act != "" && k == "Name[" short "]" { sname[act] = v }
 act != "" && k == "Icon" { icon[act] = v }
 act != "" && k == "Exec" { ex[act] = v }
+act != "" && k == "NoDisplay" { hidden[act] = v }
 END {
     n = split(order, ids, ";")
     for (i = 1; i <= n; i++) {
         a = ids[i]
-        if (a == "" || ex[a] == "") continue
+        if (a == "" || ex[a] == "" || hidden[a] == "true") continue
         nm = lname[a] != "" ? lname[a] : (sname[a] != "" ? sname[a] : name[a])
         printf "%s\\037%s\\037%s\\037%s\\n", a, nm, icon[a], ex[a]
     }
@@ -78,8 +79,8 @@ function parse(stdout) {
     }).filter(action => action.exec.length > 0);
 }
 
-// Detached shell command running an Exec line without its field codes
+// Shell command running an Exec line, without its field codes, in its own systemd unit
 function launchCommand(exec) {
     const line = String(exec).replace(/%[fFuUdDnNickvm]/g, "").replace(/%%/g, "%").trim();
-    return "setsid -f sh -c " + shellQuote(line) + " >/dev/null 2>&1";
+    return "kstart -- " + line + " >/dev/null 2>&1";
 }
