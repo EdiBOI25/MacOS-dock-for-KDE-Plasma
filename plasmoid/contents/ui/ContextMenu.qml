@@ -6,6 +6,7 @@
 */
 
 import QtQuick
+import QtCore
 
 import org.kde.plasma.plasmoid
 
@@ -15,6 +16,8 @@ import org.kde.plasma.extras as PlasmaExtras
 import org.kde.taskmanager as TaskManager
 import org.kde.plasma.private.mpris as Mpris
 
+import "code/desktopactions.js" as DesktopActions
+
 PlasmaExtras.Menu {
     id: menu
 
@@ -23,6 +26,8 @@ PlasmaExtras.Menu {
     required property var tasksModel
     required property var virtualDesktopInfo
     required property var activityInfo
+    // Runs a shell command; optional callback gets its stdout
+    property var runShell: null
 
     readonly property var atm: TaskManager.AbstractTasksModel
 
@@ -57,7 +62,41 @@ PlasmaExtras.Menu {
         Plasmoid.contextualActionsAboutToShow();
 
         loadDynamicLaunchActions(get(atm.LauncherUrlWithoutIcon));
-        openRelative();
+
+        const command = runShell ? DesktopActions.listCommand(get(atm.LauncherUrlWithoutIcon),
+            StandardPaths.standardLocations(StandardPaths.ApplicationsLocation), Qt.locale().name) : "";
+        if (!command) {
+            openRelative();
+            return;
+        }
+        let opened = false;
+        const openOnce = () => {
+            if (!opened) {
+                opened = true;
+                openRelative();
+            }
+        };
+        const fallback = Qt.createQmlObject("import QtQml; Timer { interval: 300 }", menu);
+        fallback.triggered.connect(openOnce);
+        fallback.start();
+        runShell(command, stdout => {
+            addDesktopActions(DesktopActions.parse(stdout));
+            openOnce();
+        });
+    }
+
+    // Adds the app's .desktop actions (e.g. "New Private Window") above "Open New Window"
+    function addDesktopActions(actions): void {
+        for (const action of actions) {
+            const menuItem = menu.newMenuItem(menu);
+            menuItem.text = action.name;
+            menuItem.icon = action.icon;
+            menuItem.clicked.connect(() => runShell(DesktopActions.launchCommand(action.exec)));
+            menu.addMenuItem(menuItem, startNewInstanceItem);
+        }
+        if (actions.length > 0) {
+            menu.addMenuItem(newSeparator(menu), startNewInstanceItem);
+        }
     }
 
     function newMenuItem(parent: QtObject): PlasmaExtras.MenuItem {

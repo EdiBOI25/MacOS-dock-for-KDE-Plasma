@@ -13,6 +13,7 @@ import org.kde.kirigami as Kirigami
 
 import org.kde.taskmanager as TaskManager
 import org.kde.plasma.private.mpris as Mpris
+import org.kde.plasma.plasma5support as Plasma5Support
 
 PlasmoidItem {
     id: root
@@ -101,6 +102,27 @@ PlasmoidItem {
     LauncherDrop {
         id: launcherDrop
         tasksModel: tasksModel
+    }
+
+    // Runs shell commands for the context menu, passing stdout to a callback
+    Plasma5Support.DataSource {
+        id: shell
+        engine: "executable"
+        property var callbacks: ({})
+        onNewData: (sourceName, data) => {
+            disconnectSource(sourceName);
+            const callback = callbacks[sourceName];
+            delete callbacks[sourceName];
+            if (callback) {
+                callback(String(data.stdout || ""));
+            }
+        }
+        function run(command, callback) {
+            if (callback) {
+                callbacks[command] = callback;
+            }
+            connectSource(command);
+        }
     }
 
     // TaskManager Model
@@ -539,6 +561,7 @@ PlasmoidItem {
             tasksModel: tasksModel,
             virtualDesktopInfo: virtualDesktopInfo,
             activityInfo: activityInfo,
+            runShell: (command, callback) => shell.run(command, callback),
         });
         var menu = contextMenuComponent.createObject(task, initialArgs);
         if (!menu) {
