@@ -311,6 +311,10 @@ PlasmoidItem {
                 var task = taskList.getTaskAt(index);
                 console.log("Task:", task, "ModelIndex:", modelIndex);
                 if (task) {
+                    groupHoverTimer.stop();
+                    if (root.activeGroupDialog) {
+                        root.activeGroupDialog.visible = false;
+                    }
                     var menu = root.createContextMenu(task, modelIndex);
                     console.log("Menu created:", menu);
                     if (menu) {
