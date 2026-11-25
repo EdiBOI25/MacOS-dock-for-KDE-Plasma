@@ -447,7 +447,8 @@ Item {
         color: taskItem.isActive ? Kirigami.Theme.focusColor :
                taskItem.isDemandingAttention ? Kirigami.Theme.negativeTextColor :
                Kirigami.Theme.textColor
-        opacity: taskItem.isActive ? 1.0 : 0.5
+        opacity: (taskItem.isActive || taskItem.isDemandingAttention ? Plasmoid.configuration.activeIndicatorOpacity
+                  : Plasmoid.configuration.inactiveIndicatorOpacity) / 100
     }
 
     // Group indicator. Same edge, same center, no Row (it lays children out on integers).
@@ -502,7 +503,8 @@ Item {
                 Behavior on x { enabled: !taskItem.vertical; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                 Behavior on y { enabled: taskItem.vertical; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                 color: index === taskItem.activeChildIndex ? Kirigami.Theme.focusColor : Kirigami.Theme.textColor
-                opacity: index === taskItem.activeChildIndex ? 1.0 : 0.4
+                opacity: (index === taskItem.activeChildIndex ? Plasmoid.configuration.activeIndicatorOpacity
+                          : Plasmoid.configuration.inactiveIndicatorOpacity) / 100
             }
         }
     }

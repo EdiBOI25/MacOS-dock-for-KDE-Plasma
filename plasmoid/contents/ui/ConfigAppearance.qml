@@ -28,6 +28,8 @@ KCM.SimpleKCM {
     property alias cfg_dockBackgroundOpacity: dockBackgroundOpacitySlider.value
     property alias cfg_dockBorderOpacity: dockBorderOpacitySlider.value
     property alias cfg_runningIndicatorStyle: runningIndicatorStyleCombo.currentIndex
+    property alias cfg_activeIndicatorOpacity: activeIndicatorOpacitySlider.value
+    property alias cfg_inactiveIndicatorOpacity: inactiveIndicatorOpacitySlider.value
 
     // Convert between UI scale (1-10) and real zoom factor (1.0-1.24)
     // UI 1 = 1.0x (no zoom), UI 10 = 1.24x (max zoom without clipping)
@@ -252,6 +254,36 @@ KCM.SimpleKCM {
             id: runningIndicatorStyleCombo
             Kirigami.FormData.label: i18n("Running indicator:")
             model: [i18n("Dots"), i18n("Line for the active app"), i18n("Lines")]
+        }
+
+        QQC2.Slider {
+            id: activeIndicatorOpacitySlider
+            Kirigami.FormData.label: i18n("Active indicator opacity:")
+            from: 0
+            to: 100
+            stepSize: 5
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Active:")
+            QQC2.Label {
+                text: activeIndicatorOpacitySlider.value + " %"
+            }
+        }
+
+        QQC2.Slider {
+            id: inactiveIndicatorOpacitySlider
+            Kirigami.FormData.label: i18n("Inactive indicator opacity:")
+            from: 0
+            to: 100
+            stepSize: 5
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Inactive:")
+            QQC2.Label {
+                text: inactiveIndicatorOpacitySlider.value + " %"
+            }
         }
     }
 }
