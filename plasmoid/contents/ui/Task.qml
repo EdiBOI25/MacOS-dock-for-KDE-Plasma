@@ -414,23 +414,31 @@ Item {
     // Running indicator. Sits on the panel edge and does not scale with the icon.
     Rectangle {
         id: runningIndicator
+        // A short thin line when active, a dot otherwise
+        readonly property real dot: 5
+        readonly property real length: taskItem.isActive ? 14 : dot
+        readonly property real thickness: taskItem.isActive ? 3 : dot
+        // Keeps the line centred on the dots' centre line
+        readonly property real acrossOffset: (dot - (taskItem.vertical ? width : height)) / 2
         antialiasing: true
-        width: 5
-        height: 5
-        radius: 2.5
+        width: taskItem.vertical ? thickness : length
+        height: taskItem.vertical ? length : thickness
+        radius: Math.min(width, height) / 2
+        Behavior on width { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+        Behavior on height { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
         x: {
             if (!taskItem.vertical)
                 return taskItem.iconAlongCenter - width / 2;
             if (taskItem.panelOnLeft)
-                return -width;
-            return parent.width;
+                return -dot + acrossOffset;
+            return parent.width + acrossOffset;
         }
         y: {
             if (taskItem.vertical)
                 return taskItem.iconAlongCenter - height / 2;
             if (taskItem.panelOnTop)
-                return -height;
-            return parent.height;
+                return -dot + acrossOffset;
+            return parent.height + acrossOffset;
         }
         visible: !taskItem.isLauncher && !taskItem.isGroupParent
         color: taskItem.isActive ? Kirigami.Theme.focusColor :
