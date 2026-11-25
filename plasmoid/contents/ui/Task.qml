@@ -455,7 +455,14 @@ Item {
         id: groupIndicator
         readonly property real dot: 4
         readonly property real gap: 3
-        readonly property real span: taskItem.groupDotCount * dot + Math.max(0, taskItem.groupDotCount - 1) * gap
+        readonly property real lineLength: 14
+        readonly property real lineThickness: 3
+        // The active window's dot becomes a line in both line styles
+        readonly property bool hasLine: runningIndicator.style !== 0
+            && taskItem.activeChildIndex >= 0 && taskItem.activeChildIndex < taskItem.groupDotCount
+        property real span: taskItem.groupDotCount * dot + Math.max(0, taskItem.groupDotCount - 1) * gap
+            + (hasLine ? lineLength - dot : 0)
+        Behavior on span { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
         visible: taskItem.isGroupParent
         width: taskItem.vertical ? dot : span
         height: taskItem.vertical ? span : dot
@@ -478,12 +485,22 @@ Item {
             model: taskItem.groupDotCount
             Rectangle {
                 required property int index
+                readonly property bool isLine: groupIndicator.hasLine && index === taskItem.activeChildIndex
+                readonly property real length: isLine ? groupIndicator.lineLength : groupIndicator.dot
+                readonly property real thickness: isLine ? groupIndicator.lineThickness : groupIndicator.dot
+                readonly property real along: index * (groupIndicator.dot + groupIndicator.gap)
+                    + (groupIndicator.hasLine && index > taskItem.activeChildIndex ? groupIndicator.lineLength - groupIndicator.dot : 0)
+                readonly property real acrossOffset: (groupIndicator.dot - (taskItem.vertical ? width : height)) / 2
                 antialiasing: true
-                width: groupIndicator.dot
-                height: groupIndicator.dot
-                radius: groupIndicator.dot / 2
-                x: taskItem.vertical ? 0 : index * (groupIndicator.dot + groupIndicator.gap)
-                y: taskItem.vertical ? index * (groupIndicator.dot + groupIndicator.gap) : 0
+                width: taskItem.vertical ? thickness : length
+                height: taskItem.vertical ? length : thickness
+                radius: Math.min(width, height) / 2
+                x: taskItem.vertical ? acrossOffset : along
+                y: taskItem.vertical ? along : acrossOffset
+                Behavior on width { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                Behavior on height { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                Behavior on x { enabled: !taskItem.vertical; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                Behavior on y { enabled: taskItem.vertical; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                 color: index === taskItem.activeChildIndex ? Kirigami.Theme.focusColor : Kirigami.Theme.textColor
                 opacity: index === taskItem.activeChildIndex ? 1.0 : 0.4
             }
