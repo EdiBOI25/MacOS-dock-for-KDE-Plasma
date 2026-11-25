@@ -8,7 +8,7 @@
 - [x] 4. When closing grouped instances down to a single remaining one, that last instance can no longer be closed
 - [x] 5. No "preview" dialog shows when only one instance of an app is active. This should be an option in the settings menu.
 - [x] 6. Closing an instance from the dock preview doesn't close that preview tab — it just replaces the preview with the app icon
-- [ ] 7. When an app is opened, its "dot" is colored in a dark color. Check how it looks when it's replaced with a lighter system color
+- [x] 7. When an app is opened, its "dot" is colored in a dark color. Check how it looks when it's replaced with a lighter system color — Fixed: the dot used the selection colour (a darkened accent); it now uses the accent itself
 - [ ] 8. Sometimes, a newly opened app's icon has only one half displayed. A guess is that the panel doesn't extend sometimes to make room for the new task/icon
 - [x] 9. Reordering icons also minimizes them (if opened) or opens them (if minimized).This seems to happen to unpinned icons only
 - [x] 10. Right clicking an icon doesn't display its "actions". For example, the right click menu for Firefox doesn't display the "New Tab" and "New Private Tab" options. — Fixed: the menu now reads the app's .desktop actions itself (recent documents/places still missing)
@@ -17,8 +17,8 @@
 
 ## Future tasks
 
-- [ ] Change the focused window's dot color; it currently shows a darkened system color (see known issue 7)
+- [x] Change the focused window's dot color; it currently shows a darkened system color (see known issue 7) — Done: accent colour, plus active/inactive opacity settings
 - [ ] Research and add a dragging animation when reordering icons ("sliding" into the new position); currently the icon just jumps
 - [ ] Research and add an animation when an app is triggered (e.g. a link opened from another app launches the browser): pulsing, a macOS-style bounce, or similar. Currently the only sign is the dot turning orange
-- [ ] Research whether the dot under the active app should become a short line
+- [x] Research whether the dot under the active app should become a short line — Done: "Running indicator" style setting (dots / line for the active app / lines), groups included
 - [ ] Research notification badges on icons (e.g. Discord's unread count), like Windows and Plasma's own task manager show
