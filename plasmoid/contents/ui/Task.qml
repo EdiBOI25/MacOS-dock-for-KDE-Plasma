@@ -433,7 +433,7 @@ Item {
             return parent.height;
         }
         visible: !taskItem.isLauncher && !taskItem.isGroupParent
-        color: taskItem.isActive ? Kirigami.Theme.highlightColor :
+        color: taskItem.isActive ? Kirigami.Theme.focusColor :
                taskItem.isDemandingAttention ? Kirigami.Theme.negativeTextColor :
                Kirigami.Theme.textColor
         opacity: taskItem.isActive ? 1.0 : 0.5
@@ -473,7 +473,7 @@ Item {
                 radius: groupIndicator.dot / 2
                 x: taskItem.vertical ? 0 : index * (groupIndicator.dot + groupIndicator.gap)
                 y: taskItem.vertical ? index * (groupIndicator.dot + groupIndicator.gap) : 0
-                color: index === taskItem.activeChildIndex ? Kirigami.Theme.highlightColor : Kirigami.Theme.textColor
+                color: index === taskItem.activeChildIndex ? Kirigami.Theme.focusColor : Kirigami.Theme.textColor
                 opacity: index === taskItem.activeChildIndex ? 1.0 : 0.4
             }
         }
