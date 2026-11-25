@@ -27,6 +27,7 @@ KCM.SimpleKCM {
     property alias cfg_keepPanelBackground: keepPanelBackgroundCheck.checked
     property alias cfg_dockBackgroundOpacity: dockBackgroundOpacitySlider.value
     property alias cfg_dockBorderOpacity: dockBorderOpacitySlider.value
+    property alias cfg_runningIndicatorStyle: runningIndicatorStyleCombo.currentIndex
 
     // Convert between UI scale (1-10) and real zoom factor (1.0-1.24)
     // UI 1 = 1.0x (no zoom), UI 10 = 1.24x (max zoom without clipping)
@@ -245,6 +246,12 @@ KCM.SimpleKCM {
             QQC2.Label {
                 text: dockBorderOpacitySlider.value === 0 ? i18n("Off") : dockBorderOpacitySlider.value + " %"
             }
+        }
+
+        QQC2.ComboBox {
+            id: runningIndicatorStyleCombo
+            Kirigami.FormData.label: i18n("Running indicator:")
+            model: [i18n("Dots"), i18n("Line for the active app"), i18n("Lines")]
         }
     }
 }

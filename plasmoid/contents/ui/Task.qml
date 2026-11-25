@@ -6,6 +6,7 @@
 import QtQuick
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.core as PlasmaCore
+import org.kde.plasma.plasmoid
 
 import "code/launcherfromdrop.js" as LauncherFromDrop
 
@@ -414,10 +415,12 @@ Item {
     // Running indicator. Sits on the panel edge and does not scale with the icon.
     Rectangle {
         id: runningIndicator
-        // A short thin line when active, a dot otherwise
+        // A dot or a short thin line, per the running indicator style
         readonly property real dot: 5
-        readonly property real length: taskItem.isActive ? 14 : dot
-        readonly property real thickness: taskItem.isActive ? 3 : dot
+        readonly property int style: Plasmoid.configuration.runningIndicatorStyle
+        readonly property bool asLine: style === 2 || (style === 1 && taskItem.isActive)
+        readonly property real length: asLine ? 14 : dot
+        readonly property real thickness: asLine ? 3 : dot
         // Keeps the line centred on the dots' centre line
         readonly property real acrossOffset: (dot - (taskItem.vertical ? width : height)) / 2
         antialiasing: true

@@ -144,6 +144,13 @@
       <default>100</default>
     </entry>
 
+    <entry name="runningIndicatorStyle" type="Int">
+      <label>Running indicator style: 0 = dots, 1 = a line for the active app and dots for the others, 2 = lines.</label>
+      <default>1</default>
+      <min>0</min>
+      <max>2</max>
+    </entry>
+
     <!-- Audio Settings -->
     <entry name="showAudioIndicator" type="Bool">
       <label>Whether to show audio indicator on tasks playing audio.</label>
