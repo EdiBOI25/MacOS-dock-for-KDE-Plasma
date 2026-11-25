@@ -444,7 +444,7 @@ Item {
             return parent.height + acrossOffset;
         }
         visible: !taskItem.isLauncher && !taskItem.isGroupParent
-        color: taskItem.isActive ? Kirigami.Theme.focusColor :
+        color: taskItem.isActive ? Qt.lighter(Kirigami.Theme.focusColor, 1.4) :
                taskItem.isDemandingAttention ? Kirigami.Theme.negativeTextColor :
                Kirigami.Theme.textColor
         opacity: (taskItem.isActive || taskItem.isDemandingAttention ? Plasmoid.configuration.activeIndicatorOpacity
@@ -502,7 +502,7 @@ Item {
                 Behavior on height { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                 Behavior on x { enabled: !taskItem.vertical; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                 Behavior on y { enabled: taskItem.vertical; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                color: index === taskItem.activeChildIndex ? Kirigami.Theme.focusColor : Kirigami.Theme.textColor
+                color: index === taskItem.activeChildIndex ? Qt.lighter(Kirigami.Theme.focusColor, 1.4) : Kirigami.Theme.textColor
                 opacity: (index === taskItem.activeChildIndex ? Plasmoid.configuration.activeIndicatorOpacity
                           : Plasmoid.configuration.inactiveIndicatorOpacity) / 100
             }
