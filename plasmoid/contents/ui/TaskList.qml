@@ -32,6 +32,8 @@ Item {
     property int iconSizePercent: 100
     // Unread count per app id
     property var badgeCounts: ({})
+    // Hop height and time of starting icons that just went away, per app id
+    property var endedHops: ({})
 
     // Auto-shrink properties
     property bool autoShrink: true
@@ -706,6 +708,14 @@ Item {
                 baseSize: taskListRoot.effectiveIconSize
                 iconSizePercent: taskListRoot.iconSizePercent
                 badgeCount: taskListRoot.badgeCounts[model.AppId] || 0
+                appId: model.AppId || ""
+
+                Component.onCompleted: {
+                    const ended = taskListRoot.endedHops[appId];
+                    if (!isStartup && ended && Date.now() - ended.time < 500) {
+                        landHop(ended.height);
+                    }
+                }
                 zoomEnabled: taskListRoot.zoomEnabled
                 maxZoomFactor: taskListRoot.zoomFactor
                 zoomDuration: taskListRoot.zoomDuration
@@ -793,7 +803,12 @@ Item {
             }
 
             onItemAdded: taskListRoot.schedulePublishIconGeometries()
-            onItemRemoved: taskListRoot.schedulePublishIconGeometries()
+            onItemRemoved: function(index, item) {
+                if (item.isStartup && item.appId) {
+                    taskListRoot.endedHops[item.appId] = { height: item.hopHeight, time: Date.now() };
+                }
+                taskListRoot.schedulePublishIconGeometries();
+            }
         }
 
         // Global mouse area to track position across all icons

@@ -96,6 +96,16 @@ Item {
     property int iconSizePercent: 100
     // Unread count from the app's launcher badge
     property int badgeCount: 0
+    property string appId: ""
+    // Current height of the attention/launch hop
+    readonly property real hopHeight: iconContainer.attentionJump
+
+    // Lands a hop taken over from a replaced starting icon
+    function landHop(height) {
+        hopLanding.duration = Math.max(1, 500 * height / Math.max(1, maxParabolicRise));
+        iconContainer.attentionJump = height;
+        hopLanding.restart();
+    }
 
     // Zoom properties
     property int baseSize: 48
@@ -365,9 +375,18 @@ Item {
         SequentialAnimation {
             running: (taskItem.isDemandingAttention && !taskItem.hovered) || taskItem.isStartup
             loops: Animation.Infinite
+            alwaysRunToEnd: true
             NumberAnimation { target: iconContainer; property: "attentionJump"; to: taskItem.maxParabolicRise; duration: 500; easing.type: Easing.OutQuad }
             NumberAnimation { target: iconContainer; property: "attentionJump"; to: 0; duration: 500; easing.type: Easing.InQuad }
             onStopped: iconContainer.attentionJump = 0
+        }
+
+        NumberAnimation {
+            id: hopLanding
+            target: iconContainer
+            property: "attentionJump"
+            to: 0
+            easing.type: Easing.InQuad
         }
     }
 
