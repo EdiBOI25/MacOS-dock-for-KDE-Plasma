@@ -9,7 +9,14 @@ include(KDEInstallDirs)
 include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 
-find_package(Qt6 6.6 REQUIRED COMPONENTS Core)
+include(ECMQmlModule)
+
+find_package(Qt6 6.6 REQUIRED COMPONENTS Core Qml DBus)
+
+ecm_add_qml_module(badgesplugin URI local.icontasks2byedi.badges GENERATE_PLUGIN_SOURCE)
+target_sources(badgesplugin PRIVATE launcherbadges.cpp launcherbadges.h badgestate.cpp badgestate.h)
+target_link_libraries(badgesplugin PRIVATE Qt6::Core Qt6::Qml Qt6::DBus)
+ecm_finalize_qml_module(badgesplugin DESTINATION ${KDE_INSTALL_QMLDIR})
 
 if(BUILD_TESTING)
     find_package(Qt6 6.6 REQUIRED COMPONENTS Test)
