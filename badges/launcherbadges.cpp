@@ -69,7 +69,8 @@ void LauncherBadges::watch(const QString &sender)
         return;
     }
     m_watcher->addWatchedService(sender);
-    if (!QDBusConnection::sessionBus().interface()->isServiceRegistered(sender).value()) {
+    const QDBusReply<bool> registered = QDBusConnection::sessionBus().interface()->isServiceRegistered(sender);
+    if (registered.isValid() && !registered.value()) {
         m_watcher->removeWatchedService(sender);
         m_state.senderGone(sender);
     }
