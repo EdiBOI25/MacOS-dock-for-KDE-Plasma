@@ -361,9 +361,9 @@ Item {
             }
         }
 
-        // Attention animation: one smooth hop per second, looping
+        // Attention and launch animation: one smooth hop per second, looping
         SequentialAnimation {
-            running: taskItem.isDemandingAttention && !taskItem.hovered
+            running: (taskItem.isDemandingAttention && !taskItem.hovered) || taskItem.isStartup
             loops: Animation.Infinite
             NumberAnimation { target: iconContainer; property: "attentionJump"; to: taskItem.maxParabolicRise; duration: 500; easing.type: Easing.OutQuad }
             NumberAnimation { target: iconContainer; property: "attentionJump"; to: 0; duration: 500; easing.type: Easing.InQuad }
