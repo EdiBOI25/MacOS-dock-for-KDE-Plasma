@@ -28,8 +28,8 @@ install)
         && cp -r '$BADGES_SRC' '$BADGES_DEST'"
     ;;
 uninstall)
-    sudo sh -c "rm -rf '$DOCKREGION_DEST' '$BADGES_DEST'; \
-        rmdir '$QML_DIR/local/icontasks2byedi' '$QML_DIR/local' 2>/dev/null; true"
+    sudo sh -c "rm -rf '$DOCKREGION_DEST' '$BADGES_DEST' \
+        && { rmdir '$QML_DIR/local/icontasks2byedi' '$QML_DIR/local' 2>/dev/null || true; }"
     ;;
 *)
     echo "Usage: $0 [install|uninstall]" >&2

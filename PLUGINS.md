@@ -28,7 +28,7 @@ which apps such as Discord, Signal, Telegram, VS Code and Thunderbird use to
 publish unread counts. It claims the `com.canonical.Unity` name if it's free, as
 Plasma's own task manager does. Without the plugin, icons show no badges.
 
-Run its tests: `cmake -B badges/build -S badges && cmake --build badges/build && (cd badges/build && ctest)`.
+Run its tests: `cmake -B badges/build -S badges -DBUILD_TESTING=ON && cmake --build badges/build && (cd badges/build && ctest)`.
 
 ## Install
 
