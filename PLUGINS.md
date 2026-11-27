@@ -44,6 +44,9 @@ upstream's Id into `/usr/share`.
 
 ## Uninstall
 
+If you use the dockregion look, first tick "Keep the panel background and shadow"
+again (Dock settings → Appearance). Then:
+
 ```bash
 ./install-plugins.sh uninstall
 ./reload-plasma.sh
