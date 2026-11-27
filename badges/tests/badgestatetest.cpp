@@ -59,6 +59,7 @@ private Q_SLOTS:
         state.update(QStringLiteral(":1.5"), QStringLiteral("file:///usr/share/applications/x.desktop"), visibleCount);
         state.update(QStringLiteral(":1.5"), QStringLiteral("application://"), visibleCount);
         state.update(QStringLiteral(":1.5"), QStringLiteral("application://.desktop"), visibleCount);
+        state.update(QStringLiteral(":1.5"), QString(), visibleCount);
 
         QVERIFY(state.counts().isEmpty());
         QCOMPARE(changed.count(), 0);
@@ -126,6 +127,14 @@ private Q_SLOTS:
                      props({{QStringLiteral("count"), QVariant::fromValue<qlonglong>(0)},
                             {QStringLiteral("count-visible"), true}}));
 
+        QVERIFY(state.counts().isEmpty());
+
+        state.update(QStringLiteral(":1.5"), QStringLiteral("application://discord"),
+                     props({{QStringLiteral("count"), QVariant::fromValue<qlonglong>(3)}}));
+        QCOMPARE(state.counts(), (QVariantMap{{QStringLiteral("discord"), 3}}));
+
+        state.update(QStringLiteral(":1.5"), QStringLiteral("application://discord"),
+                     props({{QStringLiteral("count"), QVariant::fromValue<qlonglong>(0)}}));
         QVERIFY(state.counts().isEmpty());
     }
 };
