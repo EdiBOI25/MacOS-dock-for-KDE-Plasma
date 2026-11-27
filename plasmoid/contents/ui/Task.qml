@@ -94,6 +94,8 @@ Item {
 
     // Icon size normalization (percentage 50-100)
     property int iconSizePercent: 100
+    // Unread count from the app's launcher badge
+    property int badgeCount: 0
 
     // Zoom properties
     property int baseSize: 48
@@ -332,6 +334,31 @@ Item {
             layer.smooth: true
         }
 
+        // Unread-count badge in the icon's corner away from the screen edge
+        Rectangle {
+            id: badge
+            readonly property bool atTop: taskItem.vertical || !taskItem.panelOnTop
+            readonly property bool atRight: !(taskItem.vertical && !taskItem.panelOnLeft)
+            visible: taskItem.badgeCount > 0
+            height: Math.round(icon.height * 0.3)
+            width: Math.max(height, badgeText.implicitWidth + height * 0.5)
+            radius: height / 2
+            color: "#FF3B30"
+            x: atRight ? icon.x + icon.width - width : icon.x
+            y: atTop ? icon.y : icon.y + icon.height - height
+            layer.enabled: true
+            layer.smooth: true
+
+            Text {
+                id: badgeText
+                anchors.centerIn: parent
+                text: taskItem.badgeCount > 99 ? "99+" : taskItem.badgeCount
+                color: "white"
+                font.bold: true
+                font.pixelSize: Math.round(parent.height * 0.7)
+            }
+        }
+
         // Attention animation
         SequentialAnimation {
             running: taskItem.isDemandingAttention && !taskItem.hovered
@@ -373,10 +400,12 @@ Item {
     // Audio stream indicator - shows speaker icon when app is playing audio
     Kirigami.Icon {
         id: audioIndicator
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.rightMargin: 2
-        anchors.topMargin: 2
+        // Cell corner on the screen-edge side, opposite the badge
+        anchors.right: taskItem.vertical && taskItem.panelOnLeft ? undefined : parent.right
+        anchors.left: taskItem.vertical && taskItem.panelOnLeft ? parent.left : undefined
+        anchors.top: taskItem.panelOnTop ? parent.top : undefined
+        anchors.bottom: taskItem.panelOnTop ? undefined : parent.bottom
+        anchors.margins: 2
         width: Math.round(baseSize * 0.35)
         height: width
         source: taskItem.muted ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"

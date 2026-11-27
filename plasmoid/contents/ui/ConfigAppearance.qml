@@ -30,6 +30,7 @@ KCM.SimpleKCM {
     property alias cfg_runningIndicatorStyle: runningIndicatorStyleCombo.currentIndex
     property alias cfg_activeIndicatorOpacity: activeIndicatorOpacitySlider.value
     property alias cfg_inactiveIndicatorOpacity: inactiveIndicatorOpacitySlider.value
+    property alias cfg_showBadges: showBadgesCheck.checked
 
     // Convert between UI scale (1-10) and real zoom factor (1.0-1.24)
     // UI 1 = 1.0x (no zoom), UI 10 = 1.24x (max zoom without clipping)
@@ -284,6 +285,12 @@ KCM.SimpleKCM {
             QQC2.Label {
                 text: inactiveIndicatorOpacitySlider.value + " %"
             }
+        }
+
+        QQC2.CheckBox {
+            id: showBadgesCheck
+            Kirigami.FormData.label: i18n("Badges:")
+            text: i18n("Show notification badges")
         }
     }
 }

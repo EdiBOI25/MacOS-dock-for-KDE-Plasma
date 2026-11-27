@@ -30,6 +30,8 @@ Item {
     property real distantShrinkFactor: 0.8
     property bool antiClip: false
     property int iconSizePercent: 100
+    // Unread count per app id
+    property var badgeCounts: ({})
 
     // Auto-shrink properties
     property bool autoShrink: true
@@ -703,6 +705,7 @@ Item {
 
                 baseSize: taskListRoot.effectiveIconSize
                 iconSizePercent: taskListRoot.iconSizePercent
+                badgeCount: taskListRoot.badgeCounts[model.AppId] || 0
                 zoomEnabled: taskListRoot.zoomEnabled
                 maxZoomFactor: taskListRoot.zoomFactor
                 zoomDuration: taskListRoot.zoomDuration

@@ -41,6 +41,18 @@ PlasmoidItem {
     // Icon size normalization
     readonly property int iconSizePercent: Plasmoid.configuration.iconSizePercent
 
+    // Unread counts per app id, from the optional badges plugin
+    property var launcherBadges: null
+    readonly property var badgeCounts: launcherBadges && Plasmoid.configuration.showBadges ? launcherBadges.counts : ({})
+
+    Component.onCompleted: {
+        try {
+            launcherBadges = Qt.createQmlObject("import local.icontasks2byedi.badges; LauncherBadges {}", root);
+        } catch (error) {
+            console.warn("Dock: badges plugin not installed, no badges");
+        }
+    }
+
     preferredRepresentation: fullRepresentation
 
     Plasmoid.constraintHints: Plasmoid.CanFillArea
@@ -293,6 +305,7 @@ PlasmoidItem {
             distantShrinkFactor: 1.0
             antiClip: root.antiClip
             iconSizePercent: root.iconSizePercent
+            badgeCounts: root.badgeCounts
             autoShrink: false
             minIconSize: 24
             availableSpace: root.vertical ? root.height : root.width
