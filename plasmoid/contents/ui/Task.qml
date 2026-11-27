@@ -275,11 +275,14 @@ Item {
         id: iconContainer
         z: 1
         opacity: taskItem.isDragging ? 0.4 : 1.0
+        // Extra rise of the attention hop
+        property real attentionJump: 0
         readonly property real riseOffset: {
+            const rise = taskItem.displayRise + attentionJump;
             if (taskItem.vertical) {
-                return taskItem.panelOnLeft ? taskItem.displayRise : -taskItem.displayRise;
+                return taskItem.panelOnLeft ? rise : -rise;
             }
-            return taskItem.panelOnTop ? taskItem.displayRise : -taskItem.displayRise;
+            return taskItem.panelOnTop ? rise : -rise;
         }
         x: (parent.width - width) / 2 + (taskItem.vertical ? riseOffset : 0)
         y: (parent.height - height) / 2 + (taskItem.vertical ? 0 : riseOffset)
@@ -291,7 +294,6 @@ Item {
 
         // Calculate scale relative to max size (GPU-accelerated, smooth 60fps)
         property real pressScale: mouseArea.pressed ? 0.9 : 1.0
-        property real attentionScale: 1.0
         property real dropScale: 1.0
         property real animatedPressScale: pressScale
 
@@ -299,7 +301,7 @@ Item {
             NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
         }
 
-        property real targetScale: (displayZoom / maxZoomFactor) * (maxSize / containerSize) * animatedPressScale * attentionScale * dropScale
+        property real targetScale: (displayZoom / maxZoomFactor) * (maxSize / containerSize) * animatedPressScale * dropScale
 
         // Gentle pulse only — large scale was clipped by the panel and the layer FBO
         SequentialAnimation {
@@ -359,13 +361,13 @@ Item {
             }
         }
 
-        // Attention animation
+        // Attention animation: one smooth hop per second, looping
         SequentialAnimation {
             running: taskItem.isDemandingAttention && !taskItem.hovered
             loops: Animation.Infinite
-            NumberAnimation { target: iconContainer; property: "attentionScale"; to: 1.1; duration: 300; easing.type: Easing.OutCubic }
-            NumberAnimation { target: iconContainer; property: "attentionScale"; to: 1.0; duration: 300; easing.type: Easing.OutCubic }
-            PauseAnimation { duration: 500 }
+            NumberAnimation { target: iconContainer; property: "attentionJump"; to: taskItem.maxParabolicRise; duration: 500; easing.type: Easing.OutQuad }
+            NumberAnimation { target: iconContainer; property: "attentionJump"; to: 0; duration: 500; easing.type: Easing.InQuad }
+            onStopped: iconContainer.attentionJump = 0
         }
     }
 
@@ -376,7 +378,7 @@ Item {
         x: (parent.width - width) / 2 + (taskItem.vertical ? iconContainer.riseOffset : 0)
         y: (parent.height - height) / 2 + (taskItem.vertical ? 0 : iconContainer.riseOffset)
         readonly property real visualIconSize: {
-            const extras = iconContainer.animatedPressScale * iconContainer.attentionScale * iconContainer.dropScale;
+            const extras = iconContainer.animatedPressScale * iconContainer.dropScale;
             return taskItem.baseSize * taskItem.displayZoom * (taskItem.iconSizePercent / 100.0) * 0.88 * extras;
         }
         readonly property real plateAlong: visualIconSize + Kirigami.Units.gridUnit
