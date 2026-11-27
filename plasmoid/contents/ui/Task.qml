@@ -400,7 +400,7 @@ Item {
     // Audio stream indicator - shows speaker icon when app is playing audio
     Kirigami.Icon {
         id: audioIndicator
-        // Cell corner on the screen-edge side, opposite the badge
+        // Cell corner on the screen-edge side
         x: taskItem.vertical && taskItem.panelOnLeft ? 2 : parent.width - width - 2
         y: taskItem.panelOnTop ? 2 : parent.height - height - 2
         width: Math.round(baseSize * 0.35)
