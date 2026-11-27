@@ -150,10 +150,6 @@
       <min>0</min>
       <max>2</max>
     </entry>
-    <entry name="showBadges" type="Bool">
-      <label>Whether to show unread-count badges on icons (needs the optional badges plugin).</label>
-      <default>true</default>
-    </entry>
     <entry name="activeIndicatorOpacity" type="Int">
       <label>Opacity in percent of the running indicator of the active app or window, and of apps demanding attention.</label>
       <default>100</default>
@@ -165,6 +161,10 @@
       <default>50</default>
       <min>0</min>
       <max>100</max>
+    </entry>
+    <entry name="showBadges" type="Bool">
+      <label>Whether to show unread-count badges on icons (needs the optional badges plugin).</label>
+      <default>true</default>
     </entry>
 
     <!-- Audio Settings -->
