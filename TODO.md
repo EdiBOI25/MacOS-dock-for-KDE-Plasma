@@ -19,6 +19,6 @@
 
 - [x] Change the focused window's dot color; it currently shows a darkened system color (see known issue 7) — Done: accent colour, plus active/inactive opacity settings
 - [ ] Research and add a dragging animation when reordering icons ("sliding" into the new position); currently the icon just jumps
-- [ ] Research and add an animation when an app is triggered (e.g. a link opened from another app launches the browser): pulsing, a macOS-style bounce, or similar. Currently the only sign is the dot turning orange
+- [x] Research and add an animation when an app is triggered (e.g. a link opened from another app launches the browser): pulsing, a macOS-style bounce, or similar. Currently the only sign is the dot turning orange — Done: icons hop while demanding attention and while starting
 - [x] Research whether the dot under the active app should become a short line — Done: "Running indicator" style setting (dots / line for the active app / lines), groups included
 - [x] Research notification badges on icons (e.g. Discord's unread count), like Windows and Plasma's own task manager show — Done: optional `badges` plugin (Unity launcher API), see PLUGINS.md
