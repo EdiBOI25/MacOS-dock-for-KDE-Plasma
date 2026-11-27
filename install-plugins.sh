@@ -22,10 +22,13 @@ install)
             exit 1
         fi
     done
-    sudo sh -c "rm -rf '$DOCKREGION_DEST' '$BADGES_DEST' \
+    if ! sudo sh -c "rm -rf '$DOCKREGION_DEST' '$BADGES_DEST' \
         && mkdir -p '$QML_DIR/org/kde/plasma' '$QML_DIR/local/icontasks2byedi' \
         && cp -r '$DOCKREGION_SRC' '$DOCKREGION_DEST' \
-        && cp -r '$BADGES_SRC' '$BADGES_DEST'"
+        && cp -r '$BADGES_SRC' '$BADGES_DEST'"; then
+        echo "Install failed; the plugins may now be missing (the dock works without them). Run the script again." >&2
+        exit 1
+    fi
     ;;
 uninstall)
     sudo sh -c "rm -rf '$DOCKREGION_DEST' '$BADGES_DEST' \
