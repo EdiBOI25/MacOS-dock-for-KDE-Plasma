@@ -401,11 +401,8 @@ Item {
     Kirigami.Icon {
         id: audioIndicator
         // Cell corner on the screen-edge side, opposite the badge
-        anchors.right: taskItem.vertical && taskItem.panelOnLeft ? undefined : parent.right
-        anchors.left: taskItem.vertical && taskItem.panelOnLeft ? parent.left : undefined
-        anchors.top: taskItem.panelOnTop ? parent.top : undefined
-        anchors.bottom: taskItem.panelOnTop ? undefined : parent.bottom
-        anchors.margins: 2
+        x: taskItem.vertical && taskItem.panelOnLeft ? 2 : parent.width - width - 2
+        y: taskItem.panelOnTop ? 2 : parent.height - height - 2
         width: Math.round(baseSize * 0.35)
         height: width
         source: taskItem.muted ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"
